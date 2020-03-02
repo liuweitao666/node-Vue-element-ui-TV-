@@ -19,10 +19,14 @@
             <div>{{scope.row.gender===-1?'保密':scope.row.gender===1?'男':'女'}}</div>
           </template>
         </el-table-column>
-        <el-table-column label="创建日期">
+        <el-table-column label="身份" width="100px">
           <template slot-scope="scope">
-            {{scope.row.createdate | dateformat()}}
+            <div v-if="scope.row.username==='Asunat'">超级管理员</div>
+            <div v-else>{{scope.row.status===1?'管理员':scope.row.status===0?'普通用户':'违规用户'}}</div>
           </template>
+        </el-table-column>
+        <el-table-column label="创建日期">
+          <template slot-scope="scope">{{scope.row.createdate | dateformat()}}</template>
         </el-table-column>
         <el-table-column label="操作">
           <template slot-scope="scope">
@@ -40,11 +44,18 @@
               size="small"
               @click="removeuser(scope.row._id)"
             ></el-button>
+            <el-button
+              type="warning"
+              icon="el-icon-setting"
+              circle
+              size="small"
+              @click="editstatus(scope.row._id)"
+            ></el-button>
           </template>
         </el-table-column>
       </el-table>
       <!-- 编辑用户对话框 -->
-      <el-dialog title="编辑用户" :visible.sync="dialogEdit" width="40%">
+      <el-dialog :title="upstatus==='status'?'更改权限':'编辑用户'" :visible.sync="dialogEdit" width="40%">
         <el-form
           :model="updateuser"
           :rules="rulesedit"
@@ -53,18 +64,36 @@
           class="demo-ruleForm"
           v-if="updateuser"
         >
-          <el-from-item label="id" v-show="!updateuser._id">
-            <el-input v-model="updateuser._id" class="editinp" type="hidden"></el-input>
-          </el-from-item>
-          <el-form-item label="用户名" prop="username">
-            <el-input v-model="updateuser.username" class="editinp" disabled></el-input>
-          </el-form-item>
-          <el-form-item label="邮箱" prop="email">
-            <el-input v-model="updateuser.email" class="editinp"></el-input>
-          </el-form-item>
-          <el-form-item label="手机" prop="phone">
-            <el-input v-model="updateuser.phone" class="editinp"></el-input>
-          </el-form-item>
+          <div v-if="upstatus">
+            <el-form-item label="用户名" prop="username">
+              <el-input v-model="updateuser.username" class="editinp-dis" disabled></el-input>
+            </el-form-item>
+            <el-form-item label="权限">
+              <el-select v-model="updateuser.status" placeholder="请选择">
+                <el-option
+                  v-for="item in options"
+                  :key="item.value"
+                  :value="item.value"
+                  :label="item.label"
+                  :disabled="updateuser.username==='Asunat'"
+                ></el-option>
+              </el-select>
+            </el-form-item>
+          </div>
+          <div v-else>
+            <el-form-item label="id" v-show="!updateuser._id">
+              <el-input v-model="updateuser._id" class="editinp"></el-input>
+            </el-form-item>
+            <el-form-item label="用户名" prop="username">
+              <el-input v-model="updateuser.username" class="editinp" disabled></el-input>
+            </el-form-item>
+            <el-form-item label="邮箱" prop="email">
+              <el-input v-model="updateuser.email" class="editinp"></el-input>
+            </el-form-item>
+            <el-form-item label="手机" prop="phone">
+              <el-input v-model="updateuser.phone" class="editinp"></el-input>
+            </el-form-item>
+          </div>
         </el-form>
         <span slot="footer" class="dialog-footer">
           <el-button @click="dialogEdit = false" size="medium">取 消</el-button>
@@ -117,7 +146,24 @@ export default {
           { min: 11, max: 11, message: "长度为 11 个字符", trigger: "blur" }
         ]
       },
-      dialogEdit: false
+      dialogEdit: false,
+      // 判断是否为编辑用户
+      upstatus: "",
+      // 可修改权限数据
+      options: [
+        {
+          value: "0",
+          label: "普通用户"
+        },
+        {
+          value: "1",
+          label: "管理员"
+        },
+        {
+          value: "2",
+          label: "禁止登录"
+        },
+      ]
     };
   },
   created() {
@@ -158,8 +204,12 @@ export default {
           duration: 1500,
           type: "error"
         });
+      
+      res[0].status =  res[0].status ===0 ?'普通用户':(res[0].status ===1 ?'管理员':'禁止登录')
+      res[0].status =  res[0].username === 'Asunat'?'超级管理员': res[0].status
       this.updateuser = res[0];
-
+      this.upstatus = "";
+      // console.log(this.upstatus);
       this.dialogEdit = true;
     },
     // 监听每页显示多少条
@@ -200,12 +250,17 @@ export default {
       });
       this.getusers();
       this.dialogEdit = false;
+    },
+    // 判断是否显示更改权限
+    async editstatus(id) {
+      await this.edituser(id);
+      this.dialogEdit = true;
+      this.upstatus = "status";
     }
   }
 };
 </script>
-<style >
-
+<style scoped>
 .add-btn {
   margin-bottom: 10px;
 }
@@ -220,5 +275,9 @@ body .el-table th.gutter {
 }
 .pagenum {
   margin-top: 10px;
+}
+.editinp-dis {
+  border: none;
+  width: 80px;
 }
 </style>

@@ -29,7 +29,12 @@ import {
     FormItem,
     Pagination,
     Badge,
-    MessageBox
+    MessageBox,
+    Tooltip,
+    Notification,
+    Select,
+    Option,
+    Alert 
 } from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css';
 
@@ -61,6 +66,12 @@ Vue.use(Form)
 Vue.use(FormItem)
 Vue.use(Pagination)
 Vue.use(Badge)
+Vue.use(Tooltip)
+Vue.use(Select)
+Vue.use(Option)
+Vue.use(Alert)
 
+
+Vue.prototype.$notify = Notification
 Vue.prototype.$message = Message
 Vue.prototype.$confirm = MessageBox.confirm

@@ -6,8 +6,9 @@
 
 <script>
 
-
+import store from './store/index'
 export default {
+  store,
   name: 'App',
   components: {
 

@@ -226,16 +226,18 @@ export default {
   methods: {
     // 发送登录请求
     async login() {
-      // 发送登录请求
       // 对密码进行md5加密
-      this.loginform.password = this.$md5(this.$md5(this.loginform.password))
+      // this.loginform.password = this.$md5(this.$md5(this.loginform.password))
       // console.log(this.loginform)
       const { data: res } = await this.$http.post("/login", this.loginform);
       if (res.error_code === 1) {
         this.showtoast(res.msg);
         // eslint-disable-next-line no-unreachable
+        // 保存token令牌
         window.sessionStorage.setItem('token',res.token)
-        this.$router.push("/home");
+        // 保存用户名
+        window.sessionStorage.setItem('username',this.loginform.username)
+        this.$router.push({path:"/home"});
         return;
         // this.$router.push("/home");
       }

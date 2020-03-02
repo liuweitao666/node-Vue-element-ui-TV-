@@ -7,6 +7,7 @@ const movie = () => import('../components/home/program/movie')
 const series=()=>import('../components/home/program/series')
 const variety=()=>import('../components/home/program/variety')
 const funny =()=>import('../components/home/program/funny')
+const wlecome = ()=>import('../components/home/wlecome')
 
 Vue.use(VueRouter)
 
@@ -23,6 +24,7 @@ const routes = [
     {
         path: '/home',
         name: 'home',
+        redirect:'/wlecome',
         component: home,
         children: [
             {
@@ -39,6 +41,9 @@ const routes = [
             },
             {
                 path:'/pfunny',component:funny
+            },
+            {
+                path:'/wlecome',component:wlecome
             }
         ]
     },

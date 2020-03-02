@@ -4,6 +4,7 @@ import axios from 'axios'
 import router from './router'
 import './common/element-ui'
 import md5 from 'js-md5'
+import store from './store/index'
 
 // 把md5加密包挂载到Vue实例上
 Vue.prototype.$md5 = md5
@@ -39,6 +40,7 @@ Vue.filter('dateformat',function(origantime){
 
 
 new Vue({
+  store,
   render: h => h(App),
   router
 }).$mount('#app')
