@@ -6,7 +6,7 @@
       <!-- 头像区域 -->
       <div class="user-ifno">
         <div class="block">
-          <el-avatar :size="40" :src="circleUrl"></el-avatar>
+          <el-avatar :size="40" :src="'http://127.0.0.1:3000'+avatar" class="avatar"></el-avatar>
         </div>
         <div class="username">
           <div class="user-con">
@@ -55,8 +55,6 @@ export default {
         "el-icon-s-opportunity"
       ],
       // 默认头像
-      circleUrl:
-        "https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png",
       navlist: null
       // status:0
     };
@@ -74,6 +72,9 @@ export default {
     status: {
       type: Number,
       defaults: 0
+    },
+    avatar:{
+      type: String,
     }
   },
   created() {
@@ -135,5 +136,9 @@ export default {
   display: inline-block;
   font-size: 15px;
   color: #ffffff;
+}
+.avatar{
+  width: 100%;
+  height: 100%;
 }
 </style>

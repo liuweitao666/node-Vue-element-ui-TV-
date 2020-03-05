@@ -2,7 +2,7 @@
 <template>
   <div class="container">
     <!-- 提示弹框 -->
-    <div :class="['toast',{'show':msg?true:''}]">
+    <div :class="['toast',{'show':promsg?true:''}]">
       <i class="el-icon-warning-outline"></i>
       {{msg}}
     </div>
@@ -97,6 +97,22 @@
           </p>
           <p>
             <input
+              type="password"
+              placeholder="确认密码"
+              v-model="comfrimpw"
+              class="login-input"
+              @blur="registercpwd"
+            />
+            <span
+              :class="['promptmsg',compwd===1?'success':'error']"
+              v-if="compwd===0 || compwd"
+            >
+              <i :class="compwd===1?'el-icon-circle-check':'el-icon-circle-close'"></i>
+              {{promptmsg[compwd]}}
+            </span>
+          </p>
+          <p>
+            <input
               type="text"
               placeholder="Email"
               v-model="regform.email"
@@ -151,7 +167,7 @@
 
 <script>
 // 正则表单验证
-import { regusername, regpassword, regemail, regphone } from "../common/util";
+import { regusername, regpassword, regemail, regphone,regcompassword } from "../common/util";
 
 export default {
   name: "login",
@@ -188,7 +204,9 @@ export default {
         email: "",
         phone: ""
       },
+      comfrimpw:'',
       // 弹框toast提示消息
+      promsg:false,
       msg: "",
       // 表单验证提示消息
       promptmsg: [
@@ -201,7 +219,8 @@ export default {
         "邮箱格式不正确",
         "没有@符",
         "不能为空",
-        "手机格式不正确"
+        "手机格式不正确",
+        "两次密码不一致"
       ],
       // 用户名提示消息code
       Usercode: null,
@@ -211,6 +230,8 @@ export default {
       Userregcode: null,
       // 注册密码提示消息code
       Pwregcode: null,
+      // 确认密码提示消息
+      compwd:null,
       // 注册邮箱提示消息code
       Emailcode: null,
       // 注册手机号提示消息code
@@ -299,6 +320,13 @@ export default {
         this.Pwregcode = code;
       }, this.regform.password);
     },
+    // 确认密码
+    registercpwd(){
+      regcompassword(code=>{
+        console.log(code)
+        this.compwd =code
+      },this.regform.password,this.comfrimpw)
+    },
     // 注册表单邮箱的验证
     registermail() {
       regemail(code => {
@@ -313,9 +341,10 @@ export default {
     },
     // 控制toast弹窗
     showtoast(msg) {
+      this.promsg = true
       this.msg = msg;
       setTimeout(() => {
-        this.msg = "";
+        this.promsg = false;
       }, 2000);
     },
     // form表单按钮是否可以点击
@@ -334,23 +363,11 @@ export default {
     isresbtn() {
       return (
         this.Pwregcode !== 4 &&
-        this.Userregcode + this.Emailcode + this.Phonecode + this.Pwregcode ===
-          4
+        this.Userregcode + this.Emailcode + this.Phonecode + this.Pwregcode + this.compwd ===
+          5
       );
     }
   },
-  watch: {
-    //  监听用户名密码是否输入，判断登录按钮是否可点击
-    // "loginform.password": {
-    //   handler(value) {
-    //     if (value.length > 0 && this.loginform.username.length > 0) {
-    //       this.isbutton = false;
-    //     } else if (value.length === 0) {
-    //       this.isbutton = true;
-    //     }
-    //   }
-    // }
-  }
 };
 </script>
 
@@ -418,11 +435,7 @@ export default {
   display: block;
   width: 340px;
   padding: 10px 0 3px 3px;
-
   outline: none;
-}
-.password{
-  width: 80px;
 }
 .reset-pass {
   display: flex;
@@ -489,7 +502,7 @@ export default {
   right: 5px;
   bottom: 5px;
   opacity: 0;
-  transition: all 0.2s ease;
+  transition: all 0.5s ease;
 }
 .from1 p .success {
   color: #67c23a;
@@ -499,4 +512,5 @@ export default {
   color: #f56c6c;
   opacity: 1;
 }
+/* 动画 */
 </style>

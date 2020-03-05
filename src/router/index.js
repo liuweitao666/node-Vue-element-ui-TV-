@@ -1,14 +1,21 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
+// 引入组件模块
 const login = () => import('../views/login')
 const home = () => import('../views/home')
 const users = () => import('../components/home/users/users')
 const movie = () => import('../components/home/program/movie')
-const series=()=>import('../components/home/program/series')
-const variety=()=>import('../components/home/program/variety')
-const funny =()=>import('../components/home/program/funny')
-const wlecome = ()=>import('../components/home/wlecome')
+const series = () => import('../components/home/program/series')
+const variety = () => import('../components/home/program/variety')
+const funny = () => import('../components/home/program/funny')
+const wlecome = () => import('../components/home/wlecome')
+const userReport = () => import('../components/home/report/userReport')
+const reprogram = () => import('../components/home/report/reprogram')
+const information = () => import('../components/home/editinfo/information')
+const tolluay = () => import('../components/home/toll/tollpay')
+const tolluser = () => import('../components/home/toll/tolluser')
 
+// 挂载路由
 Vue.use(VueRouter)
 
 const routes = [
@@ -24,26 +31,47 @@ const routes = [
     {
         path: '/home',
         name: 'home',
-        redirect:'/wlecome',
+        redirect: '/wlecome',
         component: home,
+        // 定义子路由规则
         children: [
+            // 首页
+            {
+                path: '/wlecome', component: wlecome
+            },
+            // 用户管理路由
             {
                 path: '/infousers', component: users
             },
+            // 节目管理路由
             {
                 path: '/pmovie', component: movie
             },
             {
-                path:'/ptvseries',component:series
+                path: '/ptvseries', component: series
             },
             {
-                path:'/pvariety',component:variety
+                path: '/pvariety', component: variety
             },
             {
-                path:'/pfunny',component:funny
+                path: '/pfunny', component: funny
+            },
+            // 报表管理路由
+            {
+                path: '/repusers', component: userReport
             },
             {
-                path:'/wlecome',component:wlecome
+                path: '/reprogram', component: reprogram
+            },
+            {
+                path: '/information', component: information
+            },
+            // 用户费用管理
+            {
+                path: '/tolluay', component: tolluay
+            },
+            {
+                path: '/tolluser', component: tolluser
             }
         ]
     },

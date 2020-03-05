@@ -1,13 +1,17 @@
 <template>
   <el-container>
     <!-- 左侧导航栏区域 -->
-    <el-aside width="180px">
+    <el-aside width="180px" style="position:relative">
       <navigation
         :navs="navs"
         :username="userinfo.username"
         :status="userinfo.status"
+        :avatar="userinfo.avatar"
         v-if="userinfo"
       />
+      <div class="lufei">
+        <img src="@/assets/image/bottom.png" alt />
+      </div>
     </el-aside>
     <!-- 右侧内容区域 -->
     <el-container>
@@ -29,7 +33,11 @@
               <div>{{weather.weather}}</div>
               <span>{{weather.today}}</span>
             </span>
-            <img :src="weather.wdenimg" alt />
+            <img
+              src="@/assets/image/wind.png"
+              alt
+              style="width:20px;height:20px;padding:0px 5px 0 5px;"
+            />
             <span class="weather-span" style="width:50px;">
               <div>{{weather.wd}}</div>
               <span>{{weather.wden}}</span>
@@ -43,6 +51,7 @@
               v-model="searchval"
               clearable
               @clear="clearsea"
+              @keyup.native.13="searchkey"
             >
               <el-button slot="append" icon="el-icon-search" @click="searchdata"></el-button>
             </el-input>
@@ -52,9 +61,14 @@
               <el-badge is-dot class="badge-item">
                 <img src="../assets/image/msg.png" alt class="head-icon" />
               </el-badge>
-              <el-dropdown @command="handleCommand">
+              <el-dropdown @command="handleCommand" v-if="userinfo">
                 <div class="avatar">
-                  <el-avatar :size="30" :src="circleUrl" shape="square"></el-avatar>
+                  <el-avatar
+                    :size="30"
+                    :src="'http://127.0.0.1:3000'+userinfo.avatar"
+                    fit="fill"
+                    shape="square"
+                  ></el-avatar>
                   <span class="name" v-if="userinfo">{{userinfo.username}}</span>
                   <span class="name" v-else>默认用户</span>
                   <i class="el-icon-arrow-down"></i>
@@ -70,7 +84,9 @@
       </el-header>
       <!-- 右侧主体内容页面 -->
       <el-main>
-        <router-view @finduser="finduser" ref="router" />
+        <transition name="router" mode="out-in">
+          <router-view @finduser="finduser" ref="router" />
+        </transition>
       </el-main>
       <!-- 版权部分 -->
       <el-footer style="height: 60px;">
@@ -128,7 +144,7 @@ export default {
     },
     // 退出登录
     handleCommand(command) {
-      if (command == 1) return console.log("click on item " + command);
+      if (command == 1) return this.$router.push({path:'/information',query:{'_id':this.userinfo._id}});
       window.sessionStorage.removeItem("token");
       window.sessionStorage.removeItem("username");
       this.$router.go(0);
@@ -181,12 +197,27 @@ export default {
       // console.log(res)
       if (res.length !== 0) {
         this.userinfo = res[0];
-        this.$store.dispatch('asyncstatus',this.userinfo.status)
+        // 把当前用户的信息用vuex保存起来
+        await this.$store.dispatch("asyncstatus", this.userinfo.status);
+        await this.$store.dispatch("asyncuserinfo",res[0]);
         return this.$notify({
           title: "登录成功",
           message: "Wlecome来到TV用户管理系统，" + res[0].username,
           type: "success"
         });
+      }
+    },
+    // 键盘enter键搜索事件
+    searchkey(){
+      // 根据路由来判断搜索的是那个组件的数据
+      if (this.pathtitle === "infousers") {
+        this.$refs.router.queryinfo.query.username = this.searchval;
+        this.$refs.router.getusers();
+      }
+      if (this.program) {
+        // console.log(this.searchval)
+        this.$refs.router.name = this.searchval;
+        this.$refs.router.getprogramlist();
       }
     }
   },
@@ -212,7 +243,8 @@ export default {
 .el-container {
   height: 100vh;
   width: 100vw;
-  min-width: 1350px;
+  min-width: 1300px;
+  overflow-x: hidden;
 }
 .header {
   display: flex;
@@ -220,10 +252,7 @@ export default {
 }
 
 .cl-col-span-1 {
-  width: 30px;
-}
-.el-col-7 {
-  margin-left: 24px;
+  width: 35px;
 }
 /* 天气部分 */
 .weather {
@@ -233,6 +262,7 @@ export default {
   height: 40px;
   font-size: 14px;
   color: #b4ababea;
+  letter-spacing: 2px;
 }
 .weather-span {
   display: inline-block;
@@ -242,6 +272,7 @@ export default {
 /* 左部侧栏 */
 .el-aside {
   background: #253e55;
+  overflow-x: hidden;
 }
 .el-header {
   height: 40px;
@@ -251,6 +282,9 @@ export default {
   width: 100%;
   display: flex;
   justify-content: flex-end;
+}
+.el-avatar {
+  background: #ffffff;
 }
 .el-header .block .avatar {
   display: flex;
@@ -272,10 +306,10 @@ export default {
 }
 
 /* 主体部分样式 */
-
 .el-main {
   background: #eff3f5;
   padding: 20px;
+  overflow-x: hidden;
 }
 .el-footer {
   background: #eff3f5;
@@ -287,5 +321,39 @@ export default {
 .el-badge__content.is-fixed.is-dot {
   right: 6px;
   top: 3px;
+}
+.el-avatar > img {
+  width: 100%;
+}
+/* .el-aside{
+  min-width: 180px;
+  max-width: 180px;
+} */
+/* 右侧导航栏图片 */
+.lufei {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: inherit;
+}
+.lufei img {
+  width: 100%;
+}
+/* 动画 */
+.router-enter {
+  opacity: 0;
+  position: absolute;
+  transform: translateX(20%);
+}
+.router-leave-to {
+  opacity: 0;
+  transform: translateY(20%);
+  position: absolute;
+  z-index:0;
+  width: 1315px;
+}
+.router-enter-active,
+.router-leave-active {
+  transition: all 0.5s ease;
 }
 </style>

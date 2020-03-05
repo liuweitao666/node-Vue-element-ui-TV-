@@ -34,7 +34,12 @@ import {
     Notification,
     Select,
     Option,
-    Alert 
+    Alert,
+    Carousel,
+    CarouselItem,
+    DatePicker,
+    Tag,
+    Progress
 } from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css';
 
@@ -70,6 +75,11 @@ Vue.use(Tooltip)
 Vue.use(Select)
 Vue.use(Option)
 Vue.use(Alert)
+Vue.use(Carousel)
+Vue.use(CarouselItem)
+Vue.use(DatePicker)
+Vue.use(Tag)
+Vue.use(Progress)
 
 
 Vue.prototype.$notify = Notification

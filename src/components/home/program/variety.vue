@@ -18,7 +18,7 @@ import { mapActions } from 'vuex'
 export default {
   data() {
     return {
-      // 保存电影数据
+      // 保存节目数据
       programlist:null,
       name:''
     };

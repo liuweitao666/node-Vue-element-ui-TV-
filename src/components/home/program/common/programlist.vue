@@ -1,10 +1,29 @@
 <template>
   <div>
+    <el-alert
+        title="友情提示，播放后则会产生费用，请注意播放时间哦！"
+        type="warning"
+        show-icon
+        :closable="true"
+       v-if="!status"
+      ></el-alert>
     <!-- 节目列表 -->
     <el-row style="height:50px;">
-      <el-col :span="3" style="display:flex; align-items:center;height:100%">
+      
+      <!-- 添加节目 -->
+      <el-col :span="3" style="display:flex; align-items:center;height:100%" v-if="status">
         <el-button type="primary" icon="el-icon-plus" size="medium" @click="addfrom('save')">添加</el-button>
       </el-col>
+
+      <!-- 用户可以看到 -->
+      <el-col :span="3" style="display:flex; align-items:center;height:100%" v-else>
+        <h4 v-if="path==='/pmovie'">电影</h4>
+        <h4 v-else-if="path==='/ptvseries'">电视剧</h4>
+        <h4 v-else-if="path==='/pvariety'">综艺</h4>
+        <h4 v-else>搞笑视频</h4>
+      </el-col>
+
+      <!-- 排序方式 -->
       <el-col :span="21" class="sort">
         <i class="el-icon-sort"></i>
         <span class="span-sort">排序方式</span>
@@ -13,19 +32,38 @@
             :class="['select-sort-span',{'select-sort-span-active':sortClass===index}]"
             v-for="(item,index) in sort"
             :key="index"
-            @click="sortpro(index)"
-          >{{item}}</span>
+            @click="sortpro(index,item.type)"
+          >{{item.title}}</span>
         </div>
       </el-col>
     </el-row>
+    <!-- 节目内容区域 -->
     <div class="list">
-      <div v-for="item in programlist" :key="item.id" class="list-block">
-        <div class="hidearea">
-          <span>导演：{{item.director}}</span>
-          <span>主演：{{item.star}}</span>
+      <div
+        v-for="(item,index) in programlist"
+        :key="item.id"
+        class="list-block"
+        @click="adminplay(item.src,item.title)"
+      >
+        <div class="proimg" @mouseover="hovers(index)" @mouseleave="remove()">
+          <div :class="['hidearea',{'hidearea-hover':hover===index}]">
+            <span>导演：{{item.director}}</span>
+            <span>主演：{{item.star}}</span>
+          </div>
+          <img
+            :src="item.cover"
+            :alt="item.title"
+            :class="['proimage',{'proimage-hover':hover===index}]"
+          />
+          <el-tag
+            effect="dark"
+            :type="index>2?'':'success'"
+            class="tag-new"
+            size="mini"
+          >{{index===0?'最新':'HD'}}</el-tag>
         </div>
-        <img :src="item.cover" :alt="item.title" style="width:100%;height:275px;" />
         <span class="list-span">{{item.title}}</span>
+
         <!-- 用户与管理员页面 -->
         <div class="bottom-btn" v-if="status">
           <el-tooltip content="编辑" placement="top" :enterable="false">
@@ -34,7 +72,7 @@
               circle
               type="primary"
               size="small"
-              @click="findById(item._id)"
+              @click.stop="findById(item._id)"
             ></el-button>
           </el-tooltip>
           <el-tooltip content="删除" placement="top" :enterable="false">
@@ -43,13 +81,15 @@
               circle
               type="danger"
               size="small"
-              @click="deleted(item._id)"
+              @click.stop="deleted(item._id)"
             ></el-button>
           </el-tooltip>
           <el-tooltip content="收藏" placement="top" :enterable="false">
             <el-button icon="el-icon-star-off" circle size="small" type="warning"></el-button>
           </el-tooltip>
         </div>
+
+        <!-- 用户可选项 -->
         <div class="bottom-btn" v-else>
           <el-tooltip content="下载" placement="top" :enterable="false">
             <el-button icon="el-icon-download" circle type="success" size="small"></el-button>
@@ -60,15 +100,22 @@
               circle
               type="primary"
               size="small"
-              @click="playvideos(item.src,item.title)"
+              @click="uservideos(item.src,item.title,item._id,item.hot)"
             ></el-button>
           </el-tooltip>
           <el-tooltip content="收藏" placement="top" :enterable="false">
-            <el-button icon="el-icon-star-off" circle size="small" type="warning"></el-button>
+            <el-button
+              icon="el-icon-star-off"
+              circle
+              size="small"
+              type="warning"
+              @click="Favorite(item._id,item.Favorite)"
+            ></el-button>
           </el-tooltip>
         </div>
       </div>
     </div>
+
     <!-- 添加节目对话框 更新内容对话框-->
     <el-dialog
       :title="type==='save'?'添加节目':'更新内容'"
@@ -127,9 +174,17 @@
         <el-button type="primary" @click="addprogram" size="medium">确 定</el-button>
       </span>
     </el-dialog>
+
     <!-- 播放视频弹框 -->
-    <el-dialog :title="playtitle" :visible.sync="playvideo" width="60%" :top="5+'vh'">
+    <el-dialog
+      :title="playtitle"
+      :visible.sync="playvideo"
+      width="60%"
+      :top="5+'vh'"
+      @close="closevideo(videoid)"
+    >
       <el-alert title="如未自动播放请手动点击播放按钮并耐心等待" type="warning" show-icon class="alert"></el-alert>
+      <!-- 播放插件 -->
       <iframe
         width="100%"
         height="680px"
@@ -205,12 +260,25 @@ export default {
       parent: this.$parent.$parent,
       // programlist: null
       // sort排序
-      sort: ["最新", "最热", "推荐"],
+      sort: [
+        { title: "最新", type: "new" },
+        { title: "最热", type: "hot" },
+        { title: "推荐", type: "recommend" }
+      ],
       sortClass: 0,
       sta: null,
+      // 控制视频窗口的切换
       playvideo: false,
+      // 视频标题
       playtitle: null,
-      playsrc: ""
+      // 播放视频链接
+      playsrc: "",
+      // 默认播放时间
+      time: 0,
+      // 定时器
+      timer: null,
+      videoid: "",
+      hover: -1
     };
   },
   props: {
@@ -219,9 +287,7 @@ export default {
       defaults: []
     }
   },
-  created() {
-    // this.getprogramlist();
-  },
+  created() {},
   methods: {
     // 将vuex的方法映射到组件
     // 添加/更新节目内容，发送网络请求
@@ -306,32 +372,77 @@ export default {
       delete res.data[0]._id;
       this.program.data = res.data[0];
     },
-    sortpro(index) {
+    // 排序方法
+    sortpro(index, type) {
       this.sortClass = index;
+      this.$store.commit("editsort", type);
+      this.parent.getprogramlist();
     },
+    // 播放视频的方法
     playvideos(src, title) {
       this.playvideo = true;
       this.playtitle = title;
       this.playsrc = src;
-      console.log(src, title);
+    },
+    // 管理员播放
+    adminplay(src, title) {
+      if (this.status === 1) {
+        this.playvideos(src, title);
+      }
+    },
+    // 用户播放视频
+    async uservideos(src, title, id, value) {
+      this.videoid = id;
+      this.playvideos(src, title);
+      const { data: res } = await this.$http.put("/home/program/hot", {
+        id,
+        hot: value
+      });
+      if (res.code === 1) {
+        console.log(res);
+      }
+      this.timer = setInterval(() => {
+        this.time += 5;
+      }, 5000);
+      // 发起记录用户产生费用的请求
+    },
+    // 用户收藏
+    async Favorite(id, value) {
+      const { data: res } = await this.$http.put("/home/program/hot", {
+        id,
+        value
+      });
+      this.parent.getprogramlist();
+      console.log(res);
+    },
+    // 关闭视频弹框
+    async closevideo(id) {
+      clearInterval(this.timer);
+      const { data: data } = await this.$http.post("/home/program/expense", {
+        minute: this.time,
+        title: this.$route.path.slice(1),
+        id,
+        _id: this.userinfo._id
+      });
+      console.log(data, id, this.time);
+      this.time = 0;
+    },
+    // 动画
+    hovers(index) {
+      this.hover = index;
+    },
+    remove() {
+      this.hover = -1;
     }
-    // 映射vuex action
-    // ...mapActions({
-    //   getprogramlist:this.program.title
-    // })
-    // vuex 请求数据方法 获取节目列表
-    // async getprogramlist() {
-    //   const {data:res} = await this.getlist({title:this.program.title});
-    //   if (res.code !== 1) return this.$message.error("获取数据失败");
-    //   this.programlist = res.data;
-    //   console.log(res)
-    // }
   },
   computed: {
-    ...mapState(["status"])
+    ...mapState(["status", "userinfo"]),
     // programlist() {
     //   return this.$store.getters.programlist;
     // }
+    path() {
+      return this.$route.path;
+    }
   }
 };
 </script>
@@ -357,18 +468,30 @@ export default {
   box-sizing: border-box;
   overflow: hidden;
   position: relative;
+  min-width: 187px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
 }
-.list-block:hover .hidearea{
-  transform: translateY(0)
+.proimage {
+  width: 100%;
+  height: 275px;
+  transition: all 0.5s ease;
 }
-.list-block .hidearea {
+
+.hidearea {
   position: absolute;
   color: #ffffff;
   background: rgba(0, 0, 0, 0.5);
   padding: 20px;
   transition: all 0.5s ease;
-  transform: translateY(-100%) 
+  transform: translateY(-100%);
+  z-index: 99;
+}
+.proimage-hover {
+  transform: scale(1.1);
+}
+
+.hidearea-hover {
+  transform: translateY(0);
 }
 .list-block .hidearea span {
   display: inline-block;
@@ -377,7 +500,7 @@ export default {
   white-space: nowrap;
   width: 120px;
   line-height: 25px;
-  text-align: left
+  text-align: left;
 }
 .list-span {
   display: inline-block;
@@ -391,6 +514,7 @@ export default {
   display: flex;
   justify-content: space-around;
 }
+/* 排序 */
 .sort {
   display: flex;
   align-items: center;
@@ -425,5 +549,16 @@ export default {
 }
 .alert {
   margin-bottom: 10px;
+}
+/* 图片区域 */
+.proimg {
+  height: 275px;
+  overflow: hidden;
+  position: relative;
+}
+.tag-new {
+  position: absolute;
+  right: 0;
+  bottom: 0;
 }
 </style>

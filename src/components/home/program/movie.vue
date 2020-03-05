@@ -36,7 +36,7 @@ export default {
     // 获取电影列表
     async getprogramlist() {
       const {data:res} = await this.getlist({title:this.$route.path.slice(1),name:this.name});
-      if (res.code !== 1) return this.$message.error("获取数据失败");
+      if (res.code !== 1) return this.$message.error(res.msg);
       this.programlist = res.data;
       // console.log(res)
     },

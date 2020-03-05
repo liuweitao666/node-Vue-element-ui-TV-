@@ -92,6 +92,17 @@ export function regpassword(callback, password) {
     }
 }
 
+// 确认密码
+export function regcompassword(callback, pwd, compwd) {
+    console.log(pwd, compwd)
+    if (pwd === '') {
+        return callback(4)
+    } else if (pwd === compwd) {
+        return callback(1)
+    } else {
+        return callback(10)
+    }
+}
 // 验证邮箱是否正确
 export function regemail(callback, email) {
     const regemail = /^[A-Za-z0-9\u4e00-\u9fa5]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
@@ -110,10 +121,10 @@ export function regemail(callback, email) {
 // 验证手机号是否正确
 export function regphone(callback, phone) {
     const regphone = /^1[3456789]\d{9}$/
-    
+
     if (regphone.test(phone)) {
         return callback(1)
-    }else if(phone.length === 0){
+    } else if (phone.length === 0) {
         return callback(8)
     } else {
         return callback(9)
