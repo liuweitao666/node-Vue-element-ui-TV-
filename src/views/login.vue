@@ -176,7 +176,7 @@ export default {
     return {
       // 登录用户名和密码
       loginform: {
-        username: "Asunat",
+        username: "Lwtlppp",
         password: "123456"
       },
       // qq wx wb 图片数据
@@ -258,6 +258,8 @@ export default {
         window.sessionStorage.setItem('token',res.token)
         // 保存用户名
         window.sessionStorage.setItem('username',this.loginform.username)
+        // 获取当前时间
+        window.sessionStorage.setItem('token_exp',new Date().getTime())
         this.$router.push({path:"/home"});
         return;
         // this.$router.push("/home");
@@ -374,6 +376,7 @@ export default {
 <style scoped>
 .container {
   height: 100vh;
+  width:100vw;
   background: url(../assets/image/reg_bg.jpg) no-repeat center;
   background-size: cover;
   position: relative;

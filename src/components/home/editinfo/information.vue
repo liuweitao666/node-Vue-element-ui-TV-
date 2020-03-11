@@ -2,7 +2,7 @@
   <div>
     <!-- 成功提示框 -->
 
-    <prompt :prompt ="prompt" :msg="'提示'" @isprompt='changeprompt'/>
+    <prompt :prompt="prompt" :msg="'提示'" @isprompt="changeprompt" />
     <!-- 面包屑导航 -->
     <el-breadcrumb separator-class="el-icon-arrow-right">
       <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
@@ -33,6 +33,14 @@
             v-if="currentuser"
             size="small"
           >
+            <div class="form-avatar">
+              <div class="img-block">
+                <img :src="'http://127.0.0.1:3000'+currentuser.avatar" alt />
+              </div>
+              <div class="avatar-btn">
+              <el-button type="primary" class="el-btn" size="mini">更换头像</el-button>
+              </div>
+            </div>
             <el-form-item label="用户名" prop="username">
               <el-input v-model="currentuser.username" class="input-w"></el-input>
             </el-form-item>
@@ -129,7 +137,6 @@ export default {
     // 更新用户信息async
     update() {
       this.$refs.currentForm.validate(async vlied => {
-
         if (!vlied) return this.$message.error("格式不正确");
         const { data: res } = await this.$http.post(
           "/home/users",
@@ -154,8 +161,8 @@ export default {
       this.currentuser.gender = id;
     },
     // 控制提示框是否显示
-    changeprompt(){
-      this.prompt =false
+    changeprompt() {
+      this.prompt = false;
     }
   }
 };
@@ -169,6 +176,7 @@ export default {
 .info {
   width: 45%;
   margin-top: 20px;
+  position: relative;
 }
 .btn {
   display: flex;
@@ -191,7 +199,7 @@ export default {
 /* 成功提示框 */
 
 .input-w {
-  width: 300px;
+  width: 220px;
 }
 .input-w-r {
   width: 60px;
@@ -199,6 +207,36 @@ export default {
 .xian {
   height: 265px;
   border-left: 1px solid #e5e5e5;
+}
+/* 头像区域 */
+.form-avatar {
+  position: absolute;
+  top: 0;
+  right: 30px;
+}
+.img-block {
+  width: 100px;
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid #e5e9ef;
+  border-radius: 50%;
+}
+.form-avatar img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+}
+
+.avatar-btn{
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+.avatar .el-btn{
+  position: relative;
+  z-index: 99;
 }
 @keyframes image {
   0% {
@@ -211,5 +249,4 @@ export default {
     opacity: 0;
   }
 }
-
 </style>

@@ -8,13 +8,13 @@
     </el-breadcrumb>
     <el-card>
       <el-alert
-        :title="status?'您是管理员，可以随意！':`当前已看视频${minute}分钟${second}秒，产生费用${expense}元(RMB),请及时缴费!`"
+        :title="status?'您是管理员，可以随意！':`当前已看视频${minute}分钟${second}秒，您目前欠费${expense}元(RMB),请及时缴费!`"
         type="warning"
         show-icon
         :closable="false"
-        v-if="time"
+        v-if="time || price"
       ></el-alert>
-      <history :programs="programs" :id="id" v-if="programs" />
+      <history :pro="programs" :id="id" v-if="programs" />
     </el-card>
   </div>
 </template>
@@ -34,7 +34,8 @@ export default {
       // 用户名
       username: "",
       programs: null,
-      time: 0
+      time: 0,
+      price:0
     };
   },
   components: {
@@ -49,18 +50,18 @@ export default {
   methods: {
     // 计算数据
     computedata() {
-      console.log(this.time);
       this.minute = parseInt(this.time / 60);
       this.second = this.time - this.minute * 60;
-      this.expense = this.time;
+      this.expense = this.price/10;
     },
     async getprograms() {
       const { data: res } = await finddata("/home/users", {
         username: this.username
       });
       this.programs = res[0].program.reverse();
-      console.log(res[0])
-      this.time = res[0].minute;
+      // 用户总时间
+      this.time = res[0].minutes;
+      this.price = res[0].minute
       this.computedata();
     }
   },

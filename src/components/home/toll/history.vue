@@ -4,14 +4,20 @@
       <i class="el-icon-collection-tag"></i>
       <span>观看历史</span>
     </div>
-    <div class="program-list" v-if="programs.length>0">
+    <div class="program-list" v-if="programs">
       <div
         :class="['program',{'hidelist':hidelist===index}]"
         v-for="(item,index) in programs"
         :key="index"
+        
       >
         <div class="imgccover">
-          <img :src="item.cover" :alt="item.title" class="proimg" />
+          <img
+            :src="item.cover"
+            :alt="item.title"
+            class="proimg"
+            @click="goplay(item._id,item.path)"
+          />
           <!-- <div class="hidearea">
             <span>导演：{{item.director}}</span>
             <span>主演：{{item.star}}</span>
@@ -47,12 +53,16 @@ export default {
   data() {
     return {
       // 动画效果
-      hidelist: -1
+      hidelist: -1,
+      none:false,
+      programs:null
     };
   },
-  created() {},
+  created() {
+    this.programs = this.pro
+  },
   props: {
-    programs: {
+    pro: {
       type: Array,
       defaults: []
     },
@@ -63,21 +73,31 @@ export default {
   methods: {
     // 删除记录
     async remove(id, index) {
+
       const { data: res } = await this.$http.delete("/home/rehistory", {
         params: { _id: id, id: this.id }
       });
       if (res.code === 1) {
         this.hidelist = index;
-        console.log(this.hidelist, index);
+        let i =index
         setTimeout(() => {
-          this.$parent.$parent.getprograms();
-          this.hidelist = -1;
+           this.programs = this.programs.filter((item,index)=>{
+             return index !==i
+           })
+           console.log(this.programs)
         }, 1000);
       }
+    },
+    goplay(id, title) {
+      console.log(id, title);
+      this.$router.push({ path: "/detail", query: { id, title } });
     }
   },
   computed: {
-    ...mapState(["status"])
+    ...mapState(["status"]),
+    // programs(){
+    //   return this.pro
+    // }
   }
 };
 </script>
@@ -181,9 +201,8 @@ export default {
 
 /* 删除列表动画 */
 .hidelist {
-  animation: hide 1.5s ease;
+  animation: hide 1s ease;
 }
-
 /* 无history时 */
 .seen {
   height: 100px;
@@ -205,12 +224,9 @@ export default {
     opacity: 1;
     transform: translateY(0);
   }
-  80% {
+  100% {
     opacity: 0;
     transform: translateY(-100%);
-  }
-  100% {
-    width: 0px;
   }
 }
 </style>

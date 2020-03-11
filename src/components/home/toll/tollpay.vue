@@ -5,17 +5,15 @@
       <div class="patment" v-if="isrecord">
         <div class="payment-title">
           <span>交易记录</span>
-          <i class="el-icon-close" @click="closerecord"></i>
+          <i class="el-icon-close icon" @click="closerecord" ></i>
         </div>
         <div v-if="toll.length>0">
           <div class="payment-content" v-for="item in toll" :key="item.id">
-            <span>金额：{{item.price}}元</span>
+            <span>金额：-{{item.price}}元</span>
             <span>时间：{{item.createtime | dateformat()}}</span>
           </div>
         </div>
-        <div class="null" v-else>
-          暂无交易记录
-        </div>
+        <div class="null" v-else>暂无交易记录</div>
       </div>
     </transition>
 
@@ -40,14 +38,14 @@
               </div>
             </div>
             <div class="progress">
-              <el-progress type="dashboard" :percentage="price/10" :color="colors"></el-progress>
+              <el-progress type="dashboard" :percentage="price" :color="colors"></el-progress>
               <div>
                 <span>欠费百分比</span>
               </div>
             </div>
           </div>
           <div class="expense" v-if="status">
-            <span>尊贵的管理员，请忽略这一元钱！</span>
+            <span>尊贵的管理员，您可以免费使用！</span>
           </div>
           <div class="expense" v-else>
             <span>尊敬的用户，{{username}}</span>
@@ -136,8 +134,7 @@ export default {
         username: this.username
       });
       this.programs = res[0].program.reverse();
-      console.log(res[0]);
-      this.price = res[0].minute;
+      this.price = (res[0].minute/100).toFixed(2);
       this.avatar = res[0].avatar;
       this.toll = res[0].toll.reverse();
     },
@@ -159,7 +156,9 @@ export default {
         this.gettoll();
         return (this.prompts = false);
       }
-      this.prompts = false;
+     
+        this.prompts = false;
+    
     },
     // 显示支付记录
     record() {
@@ -277,12 +276,12 @@ export default {
   font-size: 13px;
   padding: 0px 15px 5px;
 }
-.null{
+.null {
   width: 100%;
   text-align: center;
-  padding: 30px 0 ;
+  padding: 30px 0;
   font-size: 20px;
-  color: #999
+  color: #999;
 }
 .record-enter,
 .record-leave-to {
@@ -292,5 +291,8 @@ export default {
 .record-enter-active,
 .record-leave-active {
   transition: all 0.5s ease;
+}
+.icon{
+  cursor: pointer;
 }
 </style>

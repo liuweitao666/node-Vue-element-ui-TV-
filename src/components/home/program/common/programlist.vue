@@ -1,15 +1,14 @@
 <template>
   <div>
     <el-alert
-        title="友情提示，播放后则会产生费用，请注意播放时间哦！"
-        type="warning"
-        show-icon
-        :closable="true"
-       v-if="!status"
-      ></el-alert>
+      title="友情提示，播放后则会产生费用，且播且珍惜！"
+      type="warning"
+      show-icon
+      :closable="true"
+      v-if="!status"
+    ></el-alert>
     <!-- 节目列表 -->
     <el-row style="height:50px;">
-      
       <!-- 添加节目 -->
       <el-col :span="3" style="display:flex; align-items:center;height:100%" v-if="status">
         <el-button type="primary" icon="el-icon-plus" size="medium" @click="addfrom('save')">添加</el-button>
@@ -17,9 +16,9 @@
 
       <!-- 用户可以看到 -->
       <el-col :span="3" style="display:flex; align-items:center;height:100%" v-else>
-        <h4 v-if="path==='/pmovie'">电影</h4>
-        <h4 v-else-if="path==='/ptvseries'">电视剧</h4>
-        <h4 v-else-if="path==='/pvariety'">综艺</h4>
+        <h4 v-if="path==='pmovie'">电影</h4>
+        <h4 v-else-if="path==='ptvseries'">电视剧</h4>
+        <h4 v-else-if="path==='pvariety'">综艺</h4>
         <h4 v-else>搞笑视频</h4>
       </el-col>
 
@@ -43,7 +42,7 @@
         v-for="(item,index) in programlist"
         :key="item.id"
         class="list-block"
-        @click="adminplay(item.src,item.title)"
+        @click="goplay(item._id)"
       >
         <div class="proimg" @mouseover="hovers(index)" @mouseleave="remove()">
           <div :class="['hidearea',{'hidearea-hover':hover===index}]">
@@ -65,7 +64,7 @@
         <span class="list-span">{{item.title}}</span>
 
         <!-- 用户与管理员页面 -->
-        <div class="bottom-btn" v-if="status">
+        <div class="bottom-btn-ad" v-if="status">
           <el-tooltip content="编辑" placement="top" :enterable="false">
             <el-button
               icon="el-icon-edit"
@@ -90,118 +89,9 @@
         </div>
 
         <!-- 用户可选项 -->
-        <div class="bottom-btn" v-else>
-          <el-tooltip content="下载" placement="top" :enterable="false">
-            <el-button icon="el-icon-download" circle type="success" size="small"></el-button>
-          </el-tooltip>
-          <el-tooltip content="播放" placement="top" :enterable="false">
-            <el-button
-              icon="el-icon-video-play"
-              circle
-              type="primary"
-              size="small"
-              @click="uservideos(item.src,item.title,item._id,item.hot)"
-            ></el-button>
-          </el-tooltip>
-          <el-tooltip content="收藏" placement="top" :enterable="false">
-            <el-button
-              icon="el-icon-star-off"
-              circle
-              size="small"
-              type="warning"
-              @click="Favorite(item._id,item.Favorite)"
-            ></el-button>
-          </el-tooltip>
-        </div>
+        <div class="bottom-btn" v-else>{{item.subtitle}}</div>
       </div>
     </div>
-
-    <!-- 添加节目对话框 更新内容对话框-->
-    <el-dialog
-      :title="type==='save'?'添加节目':'更新内容'"
-      :visible.sync="dialogAdd"
-      width="40%"
-      @close="resetform"
-      :top="5+'vh'"
-    >
-      <el-form
-        :model="program.data"
-        :rules="rulesadd"
-        ref="addform"
-        label-width="80px"
-        class="demo-ruleForm"
-        size="small"
-      >
-        <el-form-item label="标题" prop="title">
-          <el-input v-model="program.data.title" class="editinp"></el-input>
-        </el-form-item>
-        <el-form-item label="导演" prop="director">
-          <el-input v-model="program.data.director" class="editinp"></el-input>
-        </el-form-item>
-        <el-form-item label="编剧" prop="writer">
-          <el-input v-model="program.data.writer" class="editinp"></el-input>
-        </el-form-item>
-        <el-form-item label="主演" prop="star">
-          <el-input v-model="program.data.star" class="editinp"></el-input>
-        </el-form-item>
-        <el-form-item label="类型" prop="type">
-          <el-input v-model="program.data.type" class="editinp"></el-input>
-        </el-form-item>
-        <el-form-item label="地区" prop="area">
-          <el-input v-model="program.data.area" class="editinp"></el-input>
-        </el-form-item>
-        <el-form-item label="语言" prop="language">
-          <el-input v-model="program.data.language" class="editinp"></el-input>
-        </el-form-item>
-        <el-form-item label="片长" prop="time">
-          <el-input v-model="program.data.time" class="editinp"></el-input>
-        </el-form-item>
-        <el-form-item label="上映时间" prop="date">
-          <el-input v-model="program.data.date" class="editinp"></el-input>
-        </el-form-item>
-        <el-form-item label="封面" prop="cover">
-          <el-input v-model="program.data.cover" class="editinp"></el-input>
-        </el-form-item>
-        <el-form-item label="简介">
-          <el-input type="textarea" :placeholder="program.data.bio" v-model="program.data.bio"></el-input>
-        </el-form-item>
-        <el-form-item label="视频链接">
-          <el-input v-model="program.data.src" class="editinp"></el-input>
-        </el-form-item>
-      </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogAdd = false" size="medium">取 消</el-button>
-        <el-button type="primary" @click="addprogram" size="medium">确 定</el-button>
-      </span>
-    </el-dialog>
-
-    <!-- 播放视频弹框 -->
-    <el-dialog
-      :title="playtitle"
-      :visible.sync="playvideo"
-      width="60%"
-      :top="5+'vh'"
-      @close="closevideo(videoid)"
-    >
-      <el-alert title="如未自动播放请手动点击播放按钮并耐心等待" type="warning" show-icon class="alert"></el-alert>
-      <!-- 播放插件 -->
-      <iframe
-        width="100%"
-        height="680px"
-        :src="playsrc"
-        frameborder="0"
-        border="0"
-        marginwidth="0"
-        marginheight="0"
-        scrolling="no"
-        allowfullscreen="allowfullscreen"
-        mozallowfullscreen="mozallowfullscreen"
-        msallowfullscreen="msallowfullscreen"
-        oallowfullscreen="oallowfullscreen"
-        webkitallowfullscreen="webkitallowfullscreen"
-        v-if="playvideo"
-      ></iframe>
-    </el-dialog>
   </div>
 </template>
 <script>
@@ -215,19 +105,19 @@ export default {
         title: this.$route.path.substr(1),
         data: {
           bio: "",
-          title: "关于哈利的那些事 The Thing About Harry (2020)",
-          director: "彼得·派格",
-          writer: "彼得·派格 / 约书亚·森特",
-          star:
-            "布丽特·巴伦 / 杰克·博尔利 / 卡拉莫·布朗 / 彼得·派格 / 吉奥塔·特拉卡斯",
-          type: "喜剧 / 爱情 / 同性",
-          area: "美国",
-          language: "英语",
-          date: "90min",
-          time: "2020-02-15",
-          cover:
-            "https://img1.doubanio.com/view/photo/s_ratio_poster/public/p2581161597.webp",
-          src: ""
+          title: "",
+          director: "",
+          writer: "",
+          star: "",
+          type: "",
+          area: "",
+          language: "",
+          date: "",
+          time: "",
+          cover: "",
+          src: "",
+          subtitle: "",
+          banner: ""
         }
       },
       dialogAdd: false,
@@ -267,16 +157,6 @@ export default {
       ],
       sortClass: 0,
       sta: null,
-      // 控制视频窗口的切换
-      playvideo: false,
-      // 视频标题
-      playtitle: null,
-      // 播放视频链接
-      playsrc: "",
-      // 默认播放时间
-      time: 0,
-      // 定时器
-      timer: null,
       videoid: "",
       hover: -1
     };
@@ -289,64 +169,14 @@ export default {
   },
   created() {},
   methods: {
-    // 将vuex的方法映射到组件
     // 添加/更新节目内容，发送网络请求
-    addprogram() {
-      this.$refs.addform.validate(async valid => {
-        if (!valid) {
-          console.log(valid);
-          this.$message({
-            showClose: true,
-            message: "请输入正确的内容",
-            duration: 1500,
-            type: "error"
-          });
-          return false;
-        }
-        let data;
-        if (this.type === "save") {
-          const { data: res } = await this.$http.post(
-            "/home/program",
-            this.program
-          );
-          data = res;
-        } else {
-          const { data: res } = await this.$http.put(
-            "/home/program",
-            this.program
-          );
-          data = res;
-        }
-        // console.log(data)
-        this.dialogAdd = false;
-        if (data.code !== 1)
-          return this.$message({
-            showClose: true,
-            message: data.msg,
-            duration: 1500,
-            type: "error"
-          });
-        this.$message({
-          showClose: true,
-          message: data.msg,
-          duration: 1500,
-          type: "success"
-        });
-        this.queryinfo.id = "";
-        console.log(this.$parent);
-        // 调用父组件的方法
-        this.parent.getprogramlist();
-      });
-    },
     addfrom() {
+      this.$router.push({
+        path: "/addprogram",
+        query: { title: this.$route.path.substr(1) }
+      });
       this.type = "save";
-      this.dialogAdd = true;
-    },
-    // 关闭添加对话框，重置表单内容
-    resetform() {
-      // console.log(123)
-      // this.$refs.addform.resetFields();
-      // 关闭对话框更新数据
+      // this.dialogAdd = true;
     },
     // 删除节目数据
     async deleted(id) {
@@ -361,16 +191,10 @@ export default {
     },
     // 根据id查询指定数据
     async findById(id) {
-      this.type = "put";
-      this.queryinfo.id = id;
-      this.dialogAdd = true;
-      const { data: res } = await this.$http.get("/home/program", {
-        params: this.queryinfo
+      this.$router.push({
+        path: "/addprogram",
+        query: { title: this.path, id }
       });
-      // 判断数据是否查询成功
-      if (res.code !== 1) return this.$message.error(res.msg);
-      delete res.data[0]._id;
-      this.program.data = res.data[0];
     },
     // 排序方法
     sortpro(index, type) {
@@ -378,61 +202,16 @@ export default {
       this.$store.commit("editsort", type);
       this.parent.getprogramlist();
     },
-    // 播放视频的方法
-    playvideos(src, title) {
-      this.playvideo = true;
-      this.playtitle = title;
-      this.playsrc = src;
-    },
-    // 管理员播放
-    adminplay(src, title) {
-      if (this.status === 1) {
-        this.playvideos(src, title);
-      }
-    },
-    // 用户播放视频
-    async uservideos(src, title, id, value) {
-      this.videoid = id;
-      this.playvideos(src, title);
-      const { data: res } = await this.$http.put("/home/program/hot", {
-        id,
-        hot: value
-      });
-      if (res.code === 1) {
-        console.log(res);
-      }
-      this.timer = setInterval(() => {
-        this.time += 5;
-      }, 5000);
-      // 发起记录用户产生费用的请求
-    },
-    // 用户收藏
-    async Favorite(id, value) {
-      const { data: res } = await this.$http.put("/home/program/hot", {
-        id,
-        value
-      });
-      this.parent.getprogramlist();
-      console.log(res);
-    },
-    // 关闭视频弹框
-    async closevideo(id) {
-      clearInterval(this.timer);
-      const { data: data } = await this.$http.post("/home/program/expense", {
-        minute: this.time,
-        title: this.$route.path.slice(1),
-        id,
-        _id: this.userinfo._id
-      });
-      console.log(data, id, this.time);
-      this.time = 0;
-    },
     // 动画
     hovers(index) {
       this.hover = index;
     },
     remove() {
       this.hover = -1;
+    },
+    // 跳转到播放页面
+    goplay(id) {
+      this.$router.push({ path: "/detail", query: { id, title: this.path } });
     }
   },
   computed: {
@@ -441,7 +220,7 @@ export default {
     //   return this.$store.getters.programlist;
     // }
     path() {
-      return this.$route.path;
+      return this.$route.path.slice(1);
     }
   }
 };
@@ -503,14 +282,25 @@ export default {
   text-align: left;
 }
 .list-span {
-  display: inline-block;
+  display: block;
   width: 120px;
-  padding: 8px 0;
+  padding: 8px 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  text-align: left
+}
+.bottom-btn {
+  width: 120px;
+  text-align: left;
+  padding:0 10px;
+  color: #999;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.bottom-btn {
+.bottom-btn-ad{
   display: flex;
   justify-content: space-around;
 }

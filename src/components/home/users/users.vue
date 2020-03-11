@@ -14,6 +14,11 @@
         <el-table-column prop="username" label="用户名" width="120px"></el-table-column>
         <el-table-column prop="email" label="邮箱"></el-table-column>
         <el-table-column prop="phone" label="手机"></el-table-column>
+        <el-table-column prop="minute" label="欠费金额" width="80px">
+          <template slot-scope="scope">
+            {{scope.row.status===1?'免费使用':scope.row.minute}}
+          </template>
+        </el-table-column>
         <el-table-column label="性别" width="50px">
           <template slot-scope="scope">
             <div>{{scope.row.gender===-1?'保密':scope.row.gender===1?'男':'女'}}</div>
@@ -90,8 +95,14 @@
             <el-form-item label="邮箱" prop="email">
               <el-input v-model="updateuser.email" class="editinp"></el-input>
             </el-form-item>
-            <el-form-item label="手机" prop="phone">
+            <el-form-item label="手机" >
               <el-input v-model="updateuser.phone" class="editinp"></el-input>
+            </el-form-item>
+            <el-form-item label="gender" >
+              <el-input v-model="updateuser.gender" class="editinp"></el-input>
+            </el-form-item>
+            <el-form-item label="region" >
+              <el-input v-model="updateuser.region" class="editinp"></el-input>
             </el-form-item>
           </div>
         </el-form>
@@ -117,6 +128,8 @@
   </div>
 </template>
 <script>
+      // res[0].status =  res[0].status ===0 ?'普通用户':(res[0].status ===1 ?'管理员':'禁止登录')
+      // res[0].status =  res[0].username === 'Asunat'?'超级管理员': res[0].status
 import { finddata, deleted } from "../../../common/crod/index";
 export default {
   data() {
@@ -205,8 +218,6 @@ export default {
           type: "error"
         });
       
-      res[0].status =  res[0].status ===0 ?'普通用户':(res[0].status ===1 ?'管理员':'禁止登录')
-      res[0].status =  res[0].username === 'Asunat'?'超级管理员': res[0].status
       this.updateuser = res[0];
       this.upstatus = "";
       // console.log(this.upstatus);
@@ -237,6 +248,7 @@ export default {
         this.finuser,
         this.updateuser
       );
+      console.log(res)
       if (res.code !== 1)
         return this.$message({
           message: res.msg,

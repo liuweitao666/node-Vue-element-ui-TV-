@@ -1,17 +1,15 @@
 <template>
   <el-container>
     <!-- 左侧导航栏区域 -->
-    <el-aside width="180px" style="position:relative">
+    <el-aside width="190px" style="position:relative">
       <navigation
         :navs="navs"
         :username="userinfo.username"
         :status="userinfo.status"
         :avatar="userinfo.avatar"
+        :minute ="userinfo.minute"
         v-if="userinfo"
       />
-      <div class="lufei">
-        <img src="@/assets/image/bottom.png" alt />
-      </div>
     </el-aside>
     <!-- 右侧内容区域 -->
     <el-container>
@@ -38,7 +36,7 @@
               alt
               style="width:20px;height:20px;padding:0px 5px 0 5px;"
             />
-            <span class="weather-span" style="width:50px;">
+            <span class="weather-span" style="width:50px;margin-right:5px">
               <div>{{weather.wd}}</div>
               <span>{{weather.wden}}</span>
             </span>
@@ -84,9 +82,7 @@
       </el-header>
       <!-- 右侧主体内容页面 -->
       <el-main>
-        <transition name="router" mode="out-in">
           <router-view @finduser="finduser" ref="router" />
-        </transition>
       </el-main>
       <!-- 版权部分 -->
       <el-footer style="height: 60px;">
@@ -147,6 +143,7 @@ export default {
       if (command == 1) return this.$router.push({path:'/information',query:{'_id':this.userinfo._id}});
       window.sessionStorage.removeItem("token");
       window.sessionStorage.removeItem("username");
+      window.sessionStorage.removeItem("token_exp");
       this.$router.go(0);
     },
     // users组件传值
@@ -200,6 +197,14 @@ export default {
         // 把当前用户的信息用vuex保存起来
         await this.$store.dispatch("asyncstatus", this.userinfo.status);
         await this.$store.dispatch("asyncuserinfo",res[0]);
+        if(this.userinfo.minute>=1000){
+          this.$router.push('/tolluay')
+          return this.$notify({
+          title: "用户异常",
+          message: "尊敬的" + res[0].username+',你目前欠费已超上限，请缴费',
+          type: "error"
+        });
+        }
         return this.$notify({
           title: "登录成功",
           message: "Wlecome来到TV用户管理系统，" + res[0].username,
@@ -330,16 +335,7 @@ export default {
   max-width: 180px;
 } */
 /* 右侧导航栏图片 */
-.lufei {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: inherit;
-}
-.lufei img {
-  width: 100%;
-}
-/* 动画 */
+/* 动画  性能低已弃用*/ 
 .router-enter {
   opacity: 0;
   position: absolute;
@@ -350,10 +346,10 @@ export default {
   transform: translateY(20%);
   position: absolute;
   z-index:0;
-  width: 1315px;
+  width: 1306px;
 }
 .router-enter-active,
 .router-leave-active {
-  transition: all 0.5s ease;
+  transition: all 0.8s ease;
 }
 </style>

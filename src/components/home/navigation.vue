@@ -33,15 +33,16 @@
           <i :class="navIcons[index]"></i>
           <span>{{item.title}}</span>
         </template>
-        <el-menu-item :index="'/'+item.path" v-for="(item,index) in item.children" :key="index">
+        <el-menu-item :index="'/'+item.path" v-for="(item,index) in item.children" :key="index" :class="{'hide':item.name==='电脑设备'}">
           <i class="el-icon-menu"></i>
-          <span>{{item.name}}</span>
+          <span>{{item.name==='搞笑类'?'动画类':item.name}}</span>
         </el-menu-item>
       </el-submenu>
     </el-menu>
   </div>
 </template>
 <script>
+
 export default {
   data() {
     return {
@@ -73,27 +74,37 @@ export default {
       type: Number,
       defaults: 0
     },
-    avatar:{
-      type: String,
+    avatar: {
+      type: String
+    },
+    minute:{
+      type:Number
     }
   },
-  created() {
-    this.getnavs();
+   created() {
+      
   },
-  mounted() {},
   methods: {
     // 展示导航栏
     getnavs() {
       if (this.status === 0) {
         this.navlist = this.navs.filter(item => {
-          return item.status === this.status;
+          if (this.minute >= 1000) {
+            return item.title === "收费管理";
+          }
+          return item.status === this.status || item.title === "报表管理";
         });
       } else {
         this.navlist = this.navs;
       }
     }
   },
-  computed: {}
+  // eslint-disable-next-line no-dupe-keys
+  async mounted(){
+    await this.getnavs();
+  },
+  computed: {
+  }
 };
 </script>
 <style scoped>
@@ -137,8 +148,11 @@ export default {
   font-size: 15px;
   color: #ffffff;
 }
-.avatar{
+.avatar {
   width: 100%;
   height: 100%;
+}
+.hide{
+  display: none;
 }
 </style>

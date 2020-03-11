@@ -39,7 +39,12 @@ import {
     CarouselItem,
     DatePicker,
     Tag,
-    Progress
+    Progress,
+    PageHeader,
+    Steps,
+    Step,
+    Tabs,
+    TabPane
 } from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css';
 
@@ -80,7 +85,11 @@ Vue.use(CarouselItem)
 Vue.use(DatePicker)
 Vue.use(Tag)
 Vue.use(Progress)
-
+Vue.use(PageHeader)
+Vue.use(Steps)
+Vue.use(Step)
+Vue.use(Tabs)
+Vue.use(TabPane)
 
 Vue.prototype.$notify = Notification
 Vue.prototype.$message = Message

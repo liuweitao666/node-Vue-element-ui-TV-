@@ -7,11 +7,12 @@
       <div class="block" ref="lunbo">
         <transition-group name="fide">
           <img
-            :src="item.img"
+            :src="item.cover"
             :alt="item.title"
             v-for="(item,index) in piclist"
             :key="item.title"
             :class="{'active':index===selected}"
+            @click="goplay(item._id,item.path)"
           />
         </transition-group>
       </div>
@@ -22,11 +23,14 @@
           v-for="(item,index) in piclist"
           :key="index"
           @mouseover="changeClass(index)"
+          @click="goplay(item._id,item.path)"
         >
           <!-- 选中之后跟之前的样式切换 -->
-          <span :class="[{'side-item-title selected':index ===selected}]">{{item.title}}</span>
+          <span :class="[{'side-item-title selected':index ===selected}]">{{item.title.slice(0,4)}}</span>
           <span v-if="!(index ===selected)">：</span>
-          <span :class="[{'side-item-bio selected':index ===selected}]">{{item.bio}}</span>
+          <span
+            :class="[{'side-item-bio selected':index ===selected},'side-span']"
+          >{{item.subtitle}}</span>
         </li>
       </ul>
     </div>
@@ -46,7 +50,9 @@ export default {
       defaults: []
     }
   },
-  created() {},
+  created() {
+    console.log(this.piclist);
+  },
   mounted() {
     this.lunbo();
   },
@@ -72,6 +78,11 @@ export default {
     // 鼠标移出启动定时器
     starttime() {
       this.lunbo();
+    },
+    // 跳转到播放页面
+    goplay(id, title) {
+      console.log(id, title);
+      this.$router.push({ path: "/detail", query: { id, title } });
     }
   }
 };
@@ -111,9 +122,12 @@ export default {
   padding: 9px 20px;
   color: #ffffff;
   cursor: pointer;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 .side .side-item .selected {
-  display: inline-block;
+  display: block;
   width: 100%;
 }
 .side-item-title {
@@ -128,6 +142,7 @@ export default {
 }
 .side-item-bio {
   color: #00be06;
+  display: block;
 }
 /* 鼠标经过样式 */
 .li-selected {

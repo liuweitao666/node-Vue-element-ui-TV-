@@ -14,6 +14,9 @@ const reprogram = () => import('../components/home/report/reprogram')
 const information = () => import('../components/home/editinfo/information')
 const tolluay = () => import('../components/home/toll/tollpay')
 const tolluser = () => import('../components/home/toll/tolluser')
+const devicetv = () => import('../components/home/device/devicetv')
+const detail = ()=>import('../components/home/program/common/detail')
+const addprogram = ()=>import('../components/home/program/addprogram/addgram')
 
 // 挂载路由
 Vue.use(VueRouter)
@@ -56,6 +59,12 @@ const routes = [
             {
                 path: '/pfunny', component: funny
             },
+            {
+                path:'/detail',component:detail
+            },
+            {
+                path:'/addprogram',component:addprogram
+            },
             // 报表管理路由
             {
                 path: '/repusers', component: userReport
@@ -72,6 +81,10 @@ const routes = [
             },
             {
                 path: '/tolluser', component: tolluser
+            },
+            // 设备路由
+            {
+                path:'/devicetv',component:devicetv
             }
         ]
     },

@@ -47,7 +47,7 @@ const store = new Vuex.Store({
                 axios.get("/home/program", {
                     params: state.queryinfo
                 }).then(res => {
-                    console.log(res)
+                
                     resolve(res)
                 }).catch(err => {
                     reject(err)

@@ -10,21 +10,28 @@
         <div class="success-bottom">
           <img src="@/assets/image/info/success.000f491.png" alt />
           <div style="padding:30px 0;">
-            <label class="label">缴费金额:</label> <el-input v-if="price"  v-model="payment" class="price" size="small"></el-input>
+            <div v-if="status===1 && this.$route.path==='/tolluay'">
+              <span>管理员无需缴费</span>
+            </div>
+            <div v-else-if="price===0 || price">
+              <label class="label">缴费金额:</label>
+              <el-input v-model="payment" class="price" size="small"></el-input>
+            </div>
             <span v-else>更新资料成功！</span>
           </div>
-          <el-button type="primary" size="middle" @click="closeprompt">确定</el-button>
+          <el-button type="primary" size="middle" @click="closeprompt" v-if="!status">确定</el-button>
         </div>
       </div>
     </div>
   </div>
 </template>
 <script>
+import { mapState } from "vuex";
 export default {
   data() {
     return {
-      promptself:false,
-      payment:0
+      promptself: false,
+      payment: 0
     };
   },
   props: {
@@ -35,27 +42,27 @@ export default {
       type: Boolean,
       defaults: false
     },
-    price:{
-        type:Number,
-        defaults:0
+    price: {
+      type: Number,
+      defaults: 0
     }
   },
-  created(){
-      console.log(this.peice)
-      this.payment = this.price
+  created() {
+    console.log(this.peice);
+    this.payment = this.price;
   },
   methods: {
     //   关闭选框
     closeprompt() {
-      this.$emit('isprompt',this.payment)
+      this.$emit("isprompt", this.payment);
     },
     // 关闭
-    close(){
-        this.$emit('isprompt')
+    close() {
+      this.$emit("isprompt");
     }
   },
-  computed:{
-      
+  computed: {
+    ...mapState(["status"])
   }
 };
 </script>
@@ -99,14 +106,15 @@ export default {
   justify-content: center;
 }
 /* 输入框 */
-.price{
-    width: 100px;
+.price {
+  width: 100px;
 }
-.label{
-    font-size: 14px;
+.label {
+  font-size: 14px;
+  padding-right: 10px;
 }
-.close{
-    cursor: pointer;
+.close {
+  cursor: pointer;
 }
 @keyframes success {
   0% {
