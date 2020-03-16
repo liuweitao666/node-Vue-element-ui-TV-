@@ -42,7 +42,7 @@
         v-for="(item,index) in programlist"
         :key="item.id"
         class="list-block"
-        @click="goplay(item._id)"
+        @click="goplay(item._id,item.hot)"
       >
         <div class="proimg" @mouseover="hovers(index)" @mouseleave="remove()">
           <div :class="['hidearea',{'hidearea-hover':hover===index}]">
@@ -50,7 +50,7 @@
             <span>主演：{{item.star}}</span>
           </div>
           <img
-            :src="item.cover"
+            :src="'http://127.0.0.1:3000'+item.cover"
             :alt="item.title"
             :class="['proimage',{'proimage-hover':hover===index}]"
           />
@@ -80,7 +80,7 @@
               circle
               type="danger"
               size="small"
-              @click.stop="deleted(item._id)"
+              @click.stop="deleted(item._id,item.title)"
             ></el-button>
           </el-tooltip>
           <el-tooltip content="收藏" placement="top" :enterable="false">
@@ -167,7 +167,10 @@ export default {
       defaults: []
     }
   },
-  created() {},
+  created() {
+      console.log(this.program.data.title)
+
+  },
   methods: {
     // 添加/更新节目内容，发送网络请求
     addfrom() {
@@ -179,10 +182,11 @@ export default {
       // this.dialogAdd = true;
     },
     // 删除节目数据
-    async deleted(id) {
+    async deleted(id,title) {
       const code = await deleted("/home/program", {
         title: this.program.title,
-        id
+        id,
+        stitle:title
       });
       if (code === 1) {
         // 调用父组件的方法
@@ -210,7 +214,12 @@ export default {
       this.hover = -1;
     },
     // 跳转到播放页面
-    goplay(id) {
+    async goplay(id,hot) {
+      const { data: res } = await this.$http.put("/home/program/hot", {
+        id,
+        hot
+      });
+      if(res.code!==1) return this.$message.error('服务器出错，请稍后再试！！')
       this.$router.push({ path: "/detail", query: { id, title: this.path } });
     }
   },
@@ -236,7 +245,8 @@ export default {
   flex-wrap: wrap;
   overflow: auto;
   font-size: 13px;
-  margin-left: 5px;
+  margin-left: 2px;
+  color: #303133
 }
 .list-block {
   margin: 10px 10px 5px;
@@ -244,7 +254,6 @@ export default {
   width: 15%;
   border-radius: 5px;
   padding-bottom: 10px;
-  box-sizing: border-box;
   overflow: hidden;
   position: relative;
   min-width: 187px;

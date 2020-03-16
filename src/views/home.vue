@@ -1,5 +1,7 @@
 <template>
   <el-container>
+    <!-- 点击让搜索记录消失 -->
+    <div class="hidehis" v-if="history" @click="hidehis"></div>
     <!-- 左侧导航栏区域 -->
     <el-aside width="190px" style="position:relative">
       <navigation
@@ -7,7 +9,7 @@
         :username="userinfo.username"
         :status="userinfo.status"
         :avatar="userinfo.avatar"
-        :minute ="userinfo.minute"
+        :minute="userinfo.minute"
         v-if="userinfo"
       />
     </el-aside>
@@ -46,13 +48,30 @@
             <el-input
               placeholder="请输入内容"
               class="input-with-select"
+              :class="{'bestup':history}"
               v-model="searchval"
               clearable
               @clear="clearsea"
               @keyup.native.13="searchkey"
+              @focus="Shistory"
             >
               <el-button slot="append" icon="el-icon-search" @click="searchdata"></el-button>
             </el-input>
+            <!-- 历史记录搜索框 -->
+            <div class="Shistory" v-if="history">
+              <div v-if="hisvalue.length===0" class="nonehis">暂无搜索记录</div>
+              <div v-else>
+                <div
+                  class="his-span"
+                  v-for="item in hisvalue"
+                  :key="item._id"
+                  @click="handleseach(item.value)"
+                >
+                  <span>{{item.value}}</span>
+                  <i class="el-icon-close" @click.stop="deletehis(item._id)"></i>
+                </div>
+              </div>
+            </div>
           </el-col>
           <el-col :span="7">
             <div class="block">
@@ -82,7 +101,7 @@
       </el-header>
       <!-- 右侧主体内容页面 -->
       <el-main>
-          <router-view @finduser="finduser" ref="router" />
+        <router-view @finduser="finduser" @username="username" ref="router" />
       </el-main>
       <!-- 版权部分 -->
       <el-footer style="height: 60px;">
@@ -92,9 +111,9 @@
   </el-container>
 </template>
 <script>
-import navigation from "../components/home/navigation";
-import { mapActions, mapState } from "vuex";
-import { finddata } from "@/common/crod/index";
+import navigation from "../components/home/navigation"
+import { mapActions, mapState } from "vuex"
+import { finddata } from "@/common/crod/index"
 
 export default {
   data() {
@@ -109,23 +128,27 @@ export default {
       finduserUrl: "",
       weather: null,
       // 保存用户信息
-      userinfo: null
-    };
+      userinfo: null,
+      history: false,
+      hisvalue: null,
+      // 控制刚开始登录弹窗只出现一次
+      flag: false
+    }
   },
   components: {
     navigation
   },
   beforeCreate() {},
   created() {
-    this.username = sessionStorage.getItem("username");
+    this.username = sessionStorage.getItem("username")
     // 调用获取导航数据方法
-    this.getNav();
+    this.getNav()
     // 获取当天天气预报
-    this.getweather();
+    this.getweather()
     // 登录提示
     // this.userprompt();
     // 获取当前用户数据
-    this.getuserinfo();
+    this.getuserinfo()
     // 当前用户权限
   },
   methods: {
@@ -133,103 +156,150 @@ export default {
     ...mapActions(["getlist"]),
     // 获取导航栏数据
     async getNav() {
-      const { data: res } = await this.$http.get("/home/navs");
-      if (res.code !== 1) return console.log("获取数据失败");
-      this.navs = res.data;
+      const { data: res } = await this.$http.get("/home/navs")
+      if (res.code !== 1) return console.log("获取数据失败")
+      this.navs = res.data
       // console.log(this.navs);
     },
     // 退出登录
     handleCommand(command) {
-      if (command == 1) return this.$router.push({path:'/information',query:{'_id':this.userinfo._id}});
-      window.sessionStorage.removeItem("token");
-      window.sessionStorage.removeItem("username");
-      window.sessionStorage.removeItem("token_exp");
-      this.$router.go(0);
+      if (command == 1)
+        return this.$router.push({
+          path: "/information",
+          query: { _id: this.userinfo._id }
+        })
+      window.sessionStorage.removeItem("token")
+      window.sessionStorage.removeItem("username")
+      window.sessionStorage.removeItem("token_exp")
+      this.$router.go(0)
     },
     // users组件传值
     finduser(data) {
-      this.finduserUrl = data;
+      this.finduserUrl = data
     },
     // 搜索的点击事件
     searchdata() {
-      // 根据路由来判断搜索的是那个组件的数据
-      if (this.pathtitle === "infousers") {
-        this.$refs.router.queryinfo.query.username = this.searchval;
-        this.$refs.router.getusers();
-      }
-      if (this.program) {
-        // console.log(this.searchval)
-        this.$refs.router.name = this.searchval;
-        this.$refs.router.getprogramlist();
-      }
+      this.Addhistory()
+      this.realsearch()
+      this.history = false
     },
     // 清空搜索框
     clearsea() {
       // console.log(this.$route.path)
       // 根据路由来决定发送网络请求
       if (this.pathtitle === "infousers") {
-        this.$refs.router.queryinfo.query.username = "";
-        this.$refs.router.getusers();
+        this.$refs.router.queryinfo.query.username = ""
+        this.$refs.router.getusers()
       }
       if (this.program) {
-        this.$refs.router.name = this.searchval;
+        this.$refs.router.name = this.searchval
         // console.log(this.program)
-        this.$refs.router.getprogramlist();
+        this.$refs.router.getprogramlist()
       }
     },
     // 获取当天天气
     async getweather() {
       const { data: res } = await this.$http.get(
         "http://api.help.bj.cn/apis/weather/?id=101280101"
-      );
-      res.today = res.today.split(" ")[1];
-      this.weather = res;
+      )
+      res.today = res.today.split(" ")[1]
+      this.weather = res
       // console.log(this.weather);
     },
     // 提示用户的消息
     async getuserinfo() {
       const { data: res } = await finddata("/home/users", {
         username: this.username
-      });
+      })
       // console.log(res)
       if (res.length !== 0) {
-        this.userinfo = res[0];
+        this.userinfo = res[0]
+        this.hisvalue = res[0].history.reverse()
         // 把当前用户的信息用vuex保存起来
-        await this.$store.dispatch("asyncstatus", this.userinfo.status);
-        await this.$store.dispatch("asyncuserinfo",res[0]);
-        if(this.userinfo.minute>=1000){
-          this.$router.push('/tolluay')
+        await this.$store.dispatch("asyncstatus", this.userinfo.status)
+        await this.$store.dispatch("asyncuserinfo", res[0])
+        if (this.userinfo.minute >= 1000 && this.status === 0) {
+          this.$router.push("/tolluay")
+          this.flag = true
           return this.$notify({
-          title: "用户异常",
-          message: "尊敬的" + res[0].username+',你目前欠费已超上限，请缴费',
-          type: "error"
-        });
+            title: "用户异常",
+            message: "尊敬的" + res[0].username + ",你目前欠费已超上限，请缴费",
+            type: "error"
+          })
         }
-        return this.$notify({
-          title: "登录成功",
-          message: "Wlecome来到TV用户管理系统，" + res[0].username,
-          type: "success"
-        });
+        if (!this.flag) {
+          this.flag = true
+          return this.$notify({
+            title: "登录成功",
+            message: "Wlecome来到TV用户管理系统，" + res[0].username,
+            type: "success"
+          })
+        }
       }
     },
     // 键盘enter键搜索事件
-    searchkey(){
+    searchkey() {
+      // 添加搜索历史记录
+      this.Addhistory()
+      this.realsearch()
+      this.history = false
+      this.getuserinfo()
+    },
+    // 显示历史搜索框
+    Shistory() {
+      const reg = /^[p|i].*$/
+      console.log(reg.test(this.pathtitle))
+      if (!reg.test(this.pathtitle)) {
+        return this.$message.error("当前页面不可搜索！")
+      }
+      this.history = true
+    },
+    // 添加历史记录
+    async Addhistory() {
+      const { data: res } = await this.$http.put("/home/shistory", {
+        username: this.username,
+        value: this.searchval
+      })
+      console.log(res)
+    },
+    // 点击搜索记录搜索
+    handleseach(value) {
+      console.log(123, value)
+      this.searchval = value
+      this.realsearch()
+      this.history = false
+      this.getuserinfo()
+    },
+    // 删除搜索历史
+    async deletehis(id) {
+      console.log(123)
+
+      const { data: res } = await this.$http.delete("/home/shistory", {
+        params: { id, username: this.username }
+      })
+      if (res.code === 1) return this.getuserinfo()
+    },
+    // 搜索事件
+    realsearch() {
       // 根据路由来判断搜索的是那个组件的数据
       if (this.pathtitle === "infousers") {
-        this.$refs.router.queryinfo.query.username = this.searchval;
-        this.$refs.router.getusers();
-      }
-      if (this.program) {
+        this.$refs.router.queryinfo.query.username = this.searchval
+        this.$refs.router.getusers()
+      } else if (this.program) {
         // console.log(this.searchval)
-        this.$refs.router.name = this.searchval;
-        this.$refs.router.getprogramlist();
+        this.$refs.router.name = this.searchval
+        this.$refs.router.getprogramlist()
       }
+    },
+    // 隐藏历史搜索框
+    hidehis() {
+      this.history = false
     }
   },
   computed: {
     // 获取当前路径
     pathtitle() {
-      return this.$route.path.slice(1);
+      return this.$route.path.slice(1)
     },
     // 判断是否为节目管理路由
     program() {
@@ -238,11 +308,11 @@ export default {
         this.pathtitle === "ptvseries" ||
         this.pathtitle === "pvariety" ||
         this.pathtitle === "pfunny"
-      );
+      )
     },
     ...mapState(["status"])
   }
-};
+}
 </script>
 <style >
 .el-container {
@@ -335,7 +405,7 @@ export default {
   max-width: 180px;
 } */
 /* 右侧导航栏图片 */
-/* 动画  性能低已弃用*/ 
+/* 动画  性能低已弃用*/
 .router-enter {
   opacity: 0;
   position: absolute;
@@ -345,11 +415,51 @@ export default {
   opacity: 0;
   transform: translateY(20%);
   position: absolute;
-  z-index:0;
+  z-index: 0;
   width: 1306px;
 }
 .router-enter-active,
 .router-leave-active {
   transition: all 0.8s ease;
+}
+/* 搜索历史 */
+.Shistory {
+  width: 595px;
+  box-sizing: border-box;
+  padding: 10px 0;
+  background: #ffffff;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16);
+  z-index: 9999;
+  position: relative;
+}
+.nonehis {
+  margin: 20px auto;
+  color: #999;
+  font-size: 16px;
+  text-align: center;
+}
+.his-span {
+  padding: 9px 15px;
+  color: #222;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in;
+}
+.his-span:hover {
+  background: #f4f4f4;
+}
+.hidehis {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  z-index: 99;
+}
+.bestup {
+  position: relative;
+  z-index: 9999;
 }
 </style>

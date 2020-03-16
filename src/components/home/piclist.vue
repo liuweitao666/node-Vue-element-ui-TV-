@@ -5,16 +5,14 @@
     <div class="container" @mouseover="cleartime" @mouseleave="starttime">
       <!-- 图片区域 -->
       <div class="block" ref="lunbo">
-        <transition-group name="fide">
-          <img
-            :src="item.cover"
-            :alt="item.title"
-            v-for="(item,index) in piclist"
-            :key="item.title"
-            :class="{'active':index===selected}"
-            @click="goplay(item._id,item.path)"
-          />
-        </transition-group>
+        <img
+          :src="'http://127.0.0.1:3000'+item.banner"
+          :alt="item.title"
+          v-for="(item,index) in piclist"
+          :key="item.title"
+          :class="{'active':index===selected && act===true,'block-act':index===selected}"
+          @click="goplay(item._id,item.path)"
+        />
       </div>
       <!-- 文字区域 -->
       <ul class="side">
@@ -26,7 +24,7 @@
           @click="goplay(item._id,item.path)"
         >
           <!-- 选中之后跟之前的样式切换 -->
-          <span :class="[{'side-item-title selected':index ===selected}]">{{item.title.slice(0,4)}}</span>
+          <span :class="[{'side-item-title selected':index ===selected}]">{{item.title.slice(0,5)}}</span>
           <span v-if="!(index ===selected)">：</span>
           <span
             :class="[{'side-item-bio selected':index ===selected},'side-span']"
@@ -41,8 +39,9 @@ export default {
   data() {
     return {
       selected: 0,
-      timer: null
-    };
+      timer: null,
+      act: true
+    }
   },
   props: {
     piclist: {
@@ -51,41 +50,45 @@ export default {
     }
   },
   created() {
-    console.log(this.piclist);
+    // console.log(this.piclist);
   },
   mounted() {
-    this.lunbo();
+    this.lunbo()
   },
   methods: {
     //   改变li的样式
     changeClass(index) {
       //   console.log(index);
-      this.selected = index;
+      this.selected = index
     },
     // 轮播动画的方法
     lunbo() {
       this.timer = setInterval(() => {
-        this.selected++;
+        this.selected++
         if (this.selected === this.piclist.length) {
-          this.selected = 0;
+          this.selected = 0
         }
-      }, 4000);
+      }, 4000)
     },
     // 鼠标移入清除定时器
     cleartime() {
-      clearInterval(this.timer);
+      clearInterval(this.timer)
+      this.act = false
     },
     // 鼠标移出启动定时器
     starttime() {
-      this.lunbo();
+      this.lunbo()
+      setTimeout(() => {
+        this.act = true
+      }, 4000)
     },
     // 跳转到播放页面
     goplay(id, title) {
-      console.log(id, title);
-      this.$router.push({ path: "/detail", query: { id, title } });
+      console.log(id, title)
+      this.$router.push({ path: "/detail", query: { id, title } })
     }
   }
-};
+}
 </script>
 <style scoped>
 .container {
@@ -93,6 +96,8 @@ export default {
   position: relative;
   margin-top: 10px;
 }
+/* header部分 */
+/* 轮播图 */
 .block {
   height: 456px;
   overflow: hidden;
@@ -101,10 +106,13 @@ export default {
   width: 100%;
   height: 100%;
   display: none;
+  cursor: pointer;
+}
+.block-act {
+  display: block !important;
 }
 .block .active {
-  display: block;
-  animation: transimg 0.5s ease;
+  animation: transimg 4s ease;
 }
 /* ul 选择框 */
 .side {
@@ -170,17 +178,16 @@ export default {
 }
 @keyframes transimg {
   0% {
-    transform: translateY(50%);
+    transform: translateY(100%);
   }
-  100% {
+  20% {
     transform: translateY(0);
   }
-}
-.fide-enter .fide-leave-to {
-  opacity: 0;
-  transform: translateY(30px);
-}
-.fide-enter-active .fide-leave-active {
-  transition: all 1s ease;
+  90% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
 }
 </style>

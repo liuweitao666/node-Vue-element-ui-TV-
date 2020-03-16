@@ -48,7 +48,6 @@ export default {
     }
   },
   created() {
-    console.log(this.peice);
     this.payment = this.price;
   },
   methods: {
@@ -81,6 +80,7 @@ export default {
 .success {
   width: 400px;
   height: 335px;
+  min-height: 335px;
   position: absolute;
   background: #ffffff;
   left: 50%;

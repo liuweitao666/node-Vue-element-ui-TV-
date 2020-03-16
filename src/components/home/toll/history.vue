@@ -1,7 +1,7 @@
 <template>
   <div class="block">
     <div class="history">
-      <i class="el-icon-collection-tag"></i>
+      <i class="el-icon-pie-chart"></i>
       <span>观看历史</span>
     </div>
     <div class="program-list" v-if="programs">
@@ -9,14 +9,13 @@
         :class="['program',{'hidelist':hidelist===index}]"
         v-for="(item,index) in programs"
         :key="index"
-        
       >
-        <div class="imgccover">
+        <div class="imgccover"  @click="goplay(item._id,item.path)">
           <img
-            :src="item.cover"
+            :src="'http://127.0.0.1:3000'+item.cover"
             :alt="item.title"
             class="proimg"
-            @click="goplay(item._id,item.path)"
+           
           />
           <!-- <div class="hidearea">
             <span>导演：{{item.director}}</span>
@@ -33,7 +32,7 @@
               src="@/assets/image/close.png"
               alt
               style
-              @click="remove(item._id,index)"
+              @click.stop="remove(item._id,index)"
               class="close-img"
             />
           </div>

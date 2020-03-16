@@ -2,35 +2,149 @@
   <div>
     <!-- 首页主题部分 -->
     <el-card class="new-col">
+      <el-row :gutter="20" class="header">
+        <el-col :span="6">
+          <div class="container-card">
+            <div class="img-contain">
+              <img src="@/assets/image/wlecome/play.svg" alt class="wlecome-img" />
+            </div>
+            总播放量{{play}}
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="container-card">
+            <div class="img-contain backpro">
+              <img src="@/assets/image/wlecome/play.svg" alt class="wlecome-img" />
+            </div>
+            总节目数{{total}}
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="container-card">
+            <div class="img-contain backup">
+              <img src="@/assets/image/wlecome/update.svg" alt class="wlecome-img" />
+            </div>
+            <span>今日更新{{dayup.length}}</span>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="container-card cursor" @click="iscomment">
+            <div class="img-contain backps">
+              <img src="@/assets/image/wlecome/push.svg" alt class="wlecome-img" />
+            </div>
+            <span>留言板</span>
+          </div>
+        </el-col>
+      </el-row>
       <h4>最新节目</h4>
       <!-- 首页轮播图组件 -->
       <piclist :piclist="picimg" />
     </el-card>
+    <el-dialog :title="status?'留言内容':'留言板'" :visible.sync="comment" width="40%">
+      <div class v-if="status">
+        <div v-for="item in commentlist" :key="item._id" >
+          <div>{{item.username}}说：{{item.content}}</div>
+          <div class="createtime">{{item.createtime | dateformat()}}</div>
+        </div>
+      </div>
+      <div v-else>
+        <el-form
+          :model="comments"
+          ref="comment"
+          label-width="80px"
+          class="demo-ruleForm"
+          size="small"
+        >
+          <el-form-item label="留言内容">
+            <el-input
+              v-model="comments.content"
+              type="textarea"
+              placeholder="感谢你的建议！"
+              class="content"
+            ></el-input>
+          </el-form-item>
+        </el-form>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="comment = false" size="small">取 消</el-button>
+        <el-button type="primary" @click="submitcontent" size="small">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
 import piclist from "./piclist";
+import { mapState } from "vuex";
 export default {
   components: {
     piclist
   },
   data() {
     return {
-      picimg: []
+      picimg: [],
+      // 总节目数量
+      total: 0,
+      // 总播放数
+      play: 0,
+      // 每日更新的节目
+      dayup: [],
+      // 控制留言板的显示
+      comment: false,
+      comments: {
+        avatar: "",
+        username: "",
+        content: ""
+      },
+      commentlist:null
     };
   },
   created() {
     this.getallprogram();
+    this.getcomment();
+    // this.content.username = this.userinfo.username
   },
   methods: {
     async getallprogram() {
       const { data: res } = await this.$http.get("/home/program");
+      // 总节目数量
+      this.total =
+        res.data[0].data.length +
+        res.data[1].data.length +
+        res.data[2].data.length +
+        res.data[3].data.length;
+      // 总播放次数
+      res.data.forEach(item => {
+        item.data.forEach(item2 => (this.play = this.play + item2.hot));
+      });
+      // 获取当前时间
+      let dt = new Date();
+      let nowtime = this.dateformat(dt);
+      // 判断是否是今天更新的数据
+      res.data.forEach(item => {
+        let data = item.data.filter(item2 => {
+          let uptime = this.dateformat(item2.updatetime);
+          return nowtime === uptime;
+        });
+        // console.log(data)
+        this.dayup.push(...data);
+        console.log(this.dayup)
+      });
+      // 今日更新数
+
       // 添加首页的数据
-      let movie = res.data[0].data.reverse().slice(0, 3);
+      let movie = res.data[0].data
+        .sort((a, b) => {
+          return parseInt(a.updatetime) - parseInt(b.updatetime);
+        })
+        .slice(0, 3);
       movie.forEach(item => {
         item.path = res.data[0].title;
       });
-      let tv = res.data[1].data.reverse().slice(0, 2);
+      let tv = res.data[1].data
+        .sort((a, b) => {
+          return parseInt(a.updatetime) - parseInt(b.updatetime);
+        })
+        .slice(0, 2);
       tv.forEach(item => {
         item.path = res.data[1].title;
       });
@@ -38,16 +152,58 @@ export default {
       zy.forEach(item => {
         item.path = res.data[2].title;
       });
-      let dh = res.data[3].data.reverse().slice(0, 4);
+      let dh = res.data[3].data
+        .sort((a, b) => {
+          return parseInt(a.updatetime) - parseInt(b.updatetime);
+        })
+        .slice(0, 4);
       dh.forEach(item => {
         item.path = res.data[3].title;
       });
+      // 把节目数据加入到数组picimg
       this.picimg.push(...movie, ...tv, ...zy, ...dh);
+
+      //
+    },
+    dateformat(origantime) {
+      const dt = new Date(origantime);
+      const y = dt.getFullYear();
+      const m = (dt.getMonth() + 1 + "").padStart(2, "0");
+      const d = (dt.getDate() + "").padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    },
+    iscomment() {
+      this.comment = true;
+    },
+
+    async submitcontent() {
+      this.comments.username = this.username;
+      this.comments.content.trim();
+      const { data: res } = await this.$http.post("/comments", this.comments);
+      if (res.code !== 1) return this.$message.error(res.msg);
+      this.comments = false
+      return this.$message({
+        message: res.msg,
+        type: "success"
+      });
+    },
+    // 获取评论列表
+    async getcomment() {
+      const { data: res } = await this.$http.get("/comments");
+      if(res.code!==1) return console.log(res.msg)
+      this.commentlist = res.data
     }
+  },
+  computed: {
+    ...mapState({
+      status: state => state.status,
+      username: state => state.userinfo.username,
+      
+    })
   }
 };
 </script>
-<style scoped>
+<style lang="scss" scoped>
 .new-col {
   display: flex;
   flex-direction: column;
@@ -58,5 +214,86 @@ export default {
 .carousel img {
   width: 100%;
   height: 100%;
+}
+.header {
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+.container-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+  padding: 15px 0;
+}
+
+.cursor {
+  cursor: pointer;
+}
+.img-contain {
+  width: 55px;
+  height: 55px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(119, 127, 232, 0.9),
+    rgba(128, 202, 251, 0.5)
+  );
+  margin-right: 10px;
+  box-sizing: border-box;
+}
+.backpro {
+  background: linear-gradient(
+    to right,
+    rgba(98, 180, 94, 0.9),
+    rgba(164, 205, 93, 0.5)
+  );
+}
+.backup {
+  background: linear-gradient(
+    to right,
+    rgba(241, 95, 100, 0.9),
+    rgba(230, 132, 98, 0.5)
+  );
+}
+.backps {
+  background: linear-gradient(
+    to right,
+    rgba(239, 167, 68, 0.9),
+    rgba(229, 200, 90, 0.5)
+  );
+}
+.wlecome-img {
+  width: 25px;
+  height: 25px;
+  border-radius: 4px;
+}
+.dialog-div {
+  /deep/ .el-dialog__header {
+    padding: 0;
+  }
+
+  /deep/ .el-dialog__body {
+    padding: 0;
+  }
+
+  /deep/ .el-icon-close:before {
+    content: "";
+  }
+}
+.content {
+  height: 65px;
+  .el-textarea__inner {
+    height: 65px;
+  }
+}
+.createtime{
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 0;
+  font-size: 14px;
 }
 </style>

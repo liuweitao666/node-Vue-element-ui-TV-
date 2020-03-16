@@ -1,7 +1,6 @@
 <template>
   <div>
     <!-- 成功提示框 -->
-
     <prompt :prompt="prompt" :msg="'提示'" @isprompt="changeprompt" />
     <!-- 面包屑导航 -->
     <el-breadcrumb separator-class="el-icon-arrow-right">
@@ -22,8 +21,20 @@
         </div>
         <!-- 分割线 -->
         <div class="xian"></div>
-        <!-- 用户编辑表单 -->
+        <!-- 用户头像 -->
         <div class="info">
+          <div class="form-avatar">
+            <div class="img-block">
+              <img :src="'http://127.0.0.1:3000'+currentuser.avatar" alt />
+            </div>
+            <div class="avatar-btn">
+              <el-button type="primary" size="mini" class="buttn">点击修改</el-button>
+              <input type="file" @change="uploads" :name="currentuser.username" class="file" />
+              <!-- <el-button size="mini" type="primary">点击上传</el-button> -->
+            </div>
+          </div>
+
+          <!-- 用户编辑表单 -->
           <el-form
             :model="currentuser"
             :rules="userrules"
@@ -33,14 +44,6 @@
             v-if="currentuser"
             size="small"
           >
-            <div class="form-avatar">
-              <div class="img-block">
-                <img :src="'http://127.0.0.1:3000'+currentuser.avatar" alt />
-              </div>
-              <div class="avatar-btn">
-              <el-button type="primary" class="el-btn" size="mini">更换头像</el-button>
-              </div>
-            </div>
             <el-form-item label="用户名" prop="username">
               <el-input v-model="currentuser.username" class="input-w"></el-input>
             </el-form-item>
@@ -113,7 +116,10 @@ export default {
         { id: 1, value: "男" }
       ],
       // 控制对话框是否显示
-      prompt: false
+      prompt: false,
+      headersObj: {
+        Authorization: window.sessionStorage.getItem("token")
+      }
     };
   },
   components: {
@@ -132,7 +138,6 @@ export default {
       for (let key in res[0]) {
         this.currentuser[key] = res[0][key];
       }
-      console.log(this.currentuser);
     },
     // 更新用户信息async
     update() {
@@ -163,6 +168,27 @@ export default {
     // 控制提示框是否显示
     changeprompt() {
       this.prompt = false;
+    },
+    // 上图片的方法
+    uploads(e) {
+      const file = e.target.files[0]; //获取到当前文件对象
+      // 传递一个 FormData 对象 即可
+      let formData = new FormData();
+      console.log(file);
+      formData.append("avatar", file); // 'file' 可变 相当于 input 表单的name 属性
+      formData.append("username", this.currentuser.username);
+      // 服务器只需按照正常的上传程序代码即可
+      this.$http
+        .post("/home/upload/avatar", formData)
+        .then(res => {
+          let result = res.data;
+          if (result.code !== 1) return this.$message.error(result.msg);
+          this.getcurrentusers();
+          return this.$message.success(result.msg);
+        })
+        .catch(err => {
+          console.log(err);
+        });
     }
   }
 };
@@ -213,6 +239,7 @@ export default {
   position: absolute;
   top: 0;
   right: 30px;
+  z-index: 3;
 }
 .img-block {
   width: 100px;
@@ -224,19 +251,36 @@ export default {
   border-radius: 50%;
 }
 .form-avatar img {
-  width: 64px;
-  height: 64px;
+  width: 78px;
+  height: 78px;
   border-radius: 50%;
 }
 
-.avatar-btn{
+.avatar-btn {
   display: flex;
   justify-content: center;
   margin-top: 10px;
+  position: relative;
 }
-.avatar .el-btn{
+.avatar .el-btn {
   position: relative;
   z-index: 99;
+}
+.file {
+  width: 70px;
+  height: 26px;
+  opacity: 0;
+  position: absolute;
+  z-index: 99;
+  bottom: 0;
+  cursor: pointer;
+
+}
+.buttn {
+  transition: all 0.2s ease;
+}
+.avatar-btn:hover .buttn {
+  background: #66b1ff;
 }
 @keyframes image {
   0% {

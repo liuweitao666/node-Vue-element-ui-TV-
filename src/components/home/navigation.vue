@@ -89,7 +89,7 @@ export default {
     getnavs() {
       if (this.status === 0) {
         this.navlist = this.navs.filter(item => {
-          if (this.minute >= 1000) {
+          if (this.minute >= 10000) {
             return item.title === "收费管理";
           }
           return item.status === this.status || item.title === "报表管理";

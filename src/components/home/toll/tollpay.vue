@@ -135,6 +135,7 @@ export default {
       });
       this.programs = res[0].program.reverse();
       this.price = (res[0].minute/100).toFixed(2);
+      this.price = parseFloat(this.price)
       this.avatar = res[0].avatar;
       this.toll = res[0].toll.reverse();
     },
@@ -195,6 +196,7 @@ export default {
   width: 116px;
   height: 116px;
   text-align: center;
+  margin-top: 5px;
 }
 .expense-pro .avatar img {
   width: 100%;
@@ -202,7 +204,7 @@ export default {
   border-radius: 50%;
 }
 .martop {
-  padding-top: 10px;
+  padding-top: 5px;
 }
 /* 支付方式 */
 .payment {

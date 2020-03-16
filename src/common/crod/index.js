@@ -35,14 +35,14 @@ export let deleted = (url, params) => {
             cancelButtonText: "取消",
             type: "warning"
         }).then(async () => {
-            console.log(123)
+            
             const { data: res } = await axios.delete(url, { params })
-            console.log(res)
-            if (res.code === 0) {
+           
+            if (res.code !== 1) {
                 return Message.error({
                     showClose: true,
                     duration: 1500,
-                    message: '删除失败'
+                    message: res.msg
                 })
             } else if (res.code === 100) return Message.error({
                 showClose: true,

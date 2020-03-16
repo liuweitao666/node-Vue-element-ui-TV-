@@ -26,11 +26,15 @@
 
           <!-- 视频详细信息 -->
           <div class="v-block">
-            <div class="bg"></div>
+            <div class="bg" :style="'background: url(http://127.0.0.1:3000'+list.banner+')'"></div>
             <div class="pro-detail">
               <!-- 左边图片区域 -->
               <div class="left">
-                <img :src="list.cover" :alt="list.title" style="border-radius:4px;" />
+                <img
+                  :src="'http://127.0.0.1:3000'+list.cover"
+                  :alt="list.title"
+                  style="border-radius:4px;"
+                />
               </div>
               <!-- 右侧文字区域 -->
               <div class="right">
@@ -80,6 +84,59 @@
               </div>
             </div>
           </div>
+          <!-- 评论区域 -->
+          <div class="comments">
+            <div class="b-head">
+              <span>{{total?total:''}} 评论</span>
+
+              <div class="page-head">
+                <div class="sort">
+                  <div class="sort-time">
+                    <span :class="{'sactive':sortactive}" @click="sortact('time')">按时间排序</span>
+                    <span :class="{'sactive':!sortactive}" @click="sortact('hot')">按热度排序</span>
+                  </div>
+                </div>
+                <div class="sort-page">
+                  <el-pagination
+                    small
+                    layout="prev, pager, next"
+                    @current-change="handleCurrentChange"
+                    hide-on-single-page
+                    :total="total"
+                    :page-size="pagesize"
+                  ></el-pagination>
+                </div>
+              </div>
+            </div>
+            <div class="comm">
+              <div class="comment-send">
+                <div class="face">
+                  <img :src="'http://127.0.0.1:3000'+userinfo.avatar" alt />
+                </div>
+                <div class="textarea-container">
+                  <textarea
+                    cols="80"
+                    name="msg"
+                    rows="5"
+                    placeholder="请自觉遵守互联网相关的政策法规，严禁发布色情、暴力、反动的言论。"
+                    class="ipt-txt"
+                    v-model="comment"
+                  ></textarea>
+                  <button class="comment-submit" @click="submitcom">发表评论</button>
+                </div>
+              </div>
+              <comments :comments="comments" :title="title" v-if="title" />
+              <el-pagination
+                background
+                layout="prev, pager, next,jumper"
+                hide-on-single-page
+                :total="total"
+                :page-size="pagesize"
+                @current-change="handleCurrentChange"
+                class="page"
+              ></el-pagination>
+            </div>
+          </div>
         </el-col>
         <!-- 右侧区域 -->
         <el-col :span="7" class="video-title">
@@ -114,7 +171,7 @@
               :key="index"
               @click="select(item._id)"
             >
-              <div class="left" :style="'background:url('+item.cover+');'">
+              <div class="left" :style="'background:url('+'http://127.0.0.1:3000'+item.cover+');'">
                 <!-- <img :src="item.cover" :alt="item.title"> -->
               </div>
               <div class="right">
@@ -135,7 +192,9 @@
   </div>
 </template>
 <script>
-import { mapActions, mapState } from "vuex";
+import { mapActions, mapState } from "vuex"
+import comments from "./comments"
+
 export default {
   data() {
     return {
@@ -151,18 +210,29 @@ export default {
       // 定时器
       timer: null,
       // 记录播放时间
-      time: 0
-    };
+      time: 0,
+      comment: "",
+      comments: null,
+      // 分页
+      pagesize: 5,
+      pagenum: 1,
+      total: 0,
+      sortactive: true,
+      sort:'time'
+    }
+  },
+  components: {
+    comments
   },
   created() {
-    console.log(this.title);
-    this.id = this.$route.query.id;
-    this.getdetail();
+    this.id = this.$route.query.id
+    this.getdetail()
+    this.getcomments(this.sort)
   },
   mounted() {},
   updated() {
     if (this.time) {
-      this.clearVideo();
+      this.clearVideo()
     }
   },
   methods: {
@@ -171,91 +241,155 @@ export default {
     async getdetail() {
       const { data: res } = await this.$http.get("/home/program", {
         params: { id: this.id, title: this.title }
-      });
+      })
       if (res.code !== 1) {
-        return this.$message.error("获取列表失败");
+        return this.$message.error("获取列表失败")
       }
       // 为详细节目信息赋值
-      this.list = res.data[0];
-      let title = res.data[0].title;
+      this.list = res.data[0]
+      let title = res.data[0].title
       // 获取播放链接
       const { data: src } = await this.$http.get("/home/video", {
         params: { title }
-      });
-      if (src.code !== 1) return this.$message.error("服务器出错，请稍后再试");
-      this.src = src.data;
-      this.Video = src.data[0].src;
+      })
+      if (src.code !== 1) return this.$message.error("服务器出错，请稍后再试")
+      this.src = src.data
+      this.Video = src.data[0].src
       // 获取标签
-      this.tag = this.list.type.split(/\//g);
+      this.tag = this.list.type.split(/\//g)
 
       //获取推荐数据
       const { data: recommend } = await this.getlist({
         title: this.title,
         name: ""
-      });
+      })
       if (recommend.code !== 1) {
-        return this.$message.error(recommend.msg);
+        return this.$message.error(recommend.msg)
       }
       // 按收藏排序
       let Favorite = recommend.data.filter(item => {
-        return item._id !== this.id;
-      });
+        return item._id !== this.id
+      })
       this.recommend = Favorite.sort((a, b) => {
-        return b.Favorite - a.Favorite;
-      });
-      console.log(this.recommend);
+        return b.Favorite - a.Favorite
+      })
+      // console.log(this.recommend);
+    },
+    // 获取节目评论信息
+    async getcomments(sort) {
+      // console.log(123456)
+      const { data: res } = await this.$http.get("/home/program/comments", {
+        params: { title: this.title, id: this.id }
+      })
+      this.total = res.data.length
+      let comment
+      // 判断是否该节目是否有评论存在
+      if (res.code === 1) {
+        res.data.forEach(item => {
+          let time = new Date(item.createtime).getTime()
+          item.createtime = time
+        })
+        if (sort === "time") {
+          console.log(sort)
+          comment = res.data.sort((a, b) => {
+            return b.createtime - a.createtime
+          })
+        } else {
+          comment = res.data.sort((a, b) => {
+            return b.thumbs - a.thumbs
+          })
+        }
+
+        comment = res.data.slice(
+          (this.pagenum - 1) * this.pagesize,
+          this.pagenum * this.pagesize
+        )
+        return (this.comments = comment)
+      }
+      this.comments = comment
+      // this.comments = res.data;
     },
     // 返回上一级
     goBack() {
-      this.clearVideo();
-      this.$router.push("/" + this.title);
+      this.clearVideo()
+      this.$router.push("/" + this.title)
     },
     select(id) {
-      this.id = id;
-      this.getdetail();
+      this.id = id
+      this.getdetail()
+      this.getcomments()
     },
     // 播放视频
     async playvideo(index) {
-      this.Vindex = index;
+      this.Vindex = index
       const { data: res } = await this.$http.put("/home/program/hot", {
         id: this.list._id,
         hot: this.list.hot
-      });
+      })
       if (res.code === 1) {
         this.timer = setInterval(() => {
-          this.time += 5;
-        }, 2000);
+          this.time += 5
+        }, 2000)
       }
     },
     // 清除定时器并发送网络请求
     async clearVideo() {
-      clearInterval(this.timer);
-       await this.$http.post("/home/program/expense", {
+      clearInterval(this.timer)
+      await this.$http.post("/home/program/expense", {
         minute: this.time,
         title: this.title,
         id: this.list._id,
         _id: this.userinfo._id
-      });
-      this.time = 0;
+      })
+      this.time = 0
     },
     // 收藏事件
     async Favorite() {
-      console.log(123);
       const { data: res } = await this.$http.put("/home/program/hot", {
         id: this.list._id,
         value: this.list.Favorite
-      });
-      if (res.code !== 1) return this.$message.warning("不要重复收藏");
-      this.$message.success("收藏成功！");
+      })
+      if (res.code !== 1) return this.$message.warning("不要重复收藏")
+      this.$message.success("收藏成功！")
+    },
+    // 评论
+    async submitcom() {
+      const { data: res } = await this.$http.post("/home/program/comments", {
+        title: this.title,
+        comments: {
+          avatar: this.userinfo.avatar,
+          id: this.list._id,
+          content: this.comment,
+          username: this.userinfo.username
+        }
+      })
+      if (res.code === 1) {
+        this.$message.success(res.msg)
+        this.comment = ""
+        this.getcomments(this.sort)
+      } else {
+        this.$message.error(res.msg)
+      }
+    },
+    // 分页
+    handleCurrentChange(val) {
+      this.pagenum = val
+      this.getcomments()
+    },
+    // 控制样式
+    sortact(sort) {
+      this.sort = sort
+      this.sortactive = !this.sortactive
+      this.getcomments(sort)
     }
   },
   computed: {
     ...mapState(["userinfo"]),
     title() {
-      return this.$route.query.title;
+      return this.$route.query.title
     }
   }
-};
+}
 </script>
 <style lang="scss" scoped>
 .el-page-header {
@@ -370,11 +504,11 @@ export default {
   padding-left: 5px;
 }
 .v-block {
-  padding-top: 30px;
+  padding-top: 20px;
   position: relative;
 }
 .bg {
-  background: url(../../../../assets/image/bg.png);
+
   background-size: cover;
   height: 300px;
   filter: blur(20px);
@@ -414,7 +548,7 @@ export default {
         font-size: 20px;
         line-height: 22px;
         font-weight: 700;
-        width: 230px;
+        max-width: 230px;
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
@@ -535,5 +669,112 @@ export default {
 }
 .alert {
   margin-bottom: 10px;
+}
+// 评论区域
+.comments {
+  margin-top: 20px;
+}
+.b-head {
+  font-size: 18px;
+  color: #222;
+  line-height: 24px;
+  padding-left: 15px;
+  padding-top:10px;
+  border-bottom: 1px solid #e5e5e5;
+  margin-bottom: 20px;
+  .page-head {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 15px;
+    .sort {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      align-items: center;
+      top: 1px;
+      .sort-time {
+        span {
+          display: inline-block;
+          margin-right: 15px;
+          font-size: 14px;
+          padding: 0px 3px 8px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+      }
+    }
+    .sort-page {
+      padding: 0px 3px 8px;
+    }
+  }
+}
+.sactive {
+  border-bottom: 1px solid #00a1d6;
+  color: #00a1d6;
+}
+.comment-send {
+  display: flex;
+  justify-content: space-between;
+  .face {
+    margin: 3px 0 0 50px;
+    width: 55px;
+    height: 55px;
+
+    img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+  }
+  .textarea-container {
+    display: flex;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #e5e5e5;
+    .ipt-txt {
+      font-size: 12px;
+      display: inline-block;
+      box-sizing: border-box;
+      background-color: #f4f5f7;
+      border: 1px solid #e5e9ef;
+      overflow: auto;
+      border-radius: 4px;
+      color: #555;
+      width: 650px;
+      height: 65px;
+      transition: 0s;
+      padding: 5px 10px;
+      line-height: normal;
+      outline: none;
+    }
+    .ipt-txt:hover {
+      background: #fff;
+      border-color: #00a1d6;
+    }
+    .comment-submit {
+      width: 70px;
+      height: 64px;
+      padding: 4px 15px;
+      font-size: 14px;
+      color: #fff;
+      border-radius: 4px;
+      text-align: center;
+      min-width: 60px;
+      vertical-align: top;
+      cursor: pointer;
+      background-color: #00a1d6;
+      border: 1px solid #00a1d6;
+      transition: 0.1s;
+      user-select: none;
+      outline: none;
+      margin-left: 25px;
+    }
+    .comment-submit:hover {
+      background: #00b5e5;
+    }
+  }
+}
+// 分页
+.page {
+  margin: 20px 40px 0;
 }
 </style>
