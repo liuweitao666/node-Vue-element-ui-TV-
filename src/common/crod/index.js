@@ -30,7 +30,7 @@ export let finddata = async (url, params) => {
 export let deleted = (url, params) => {
     // 根据id删除用户
     return new Promise((resolve) => {
-        MessageBox.confirm("此操作将永久删除该文件, 是否继续?", "提示", {
+        MessageBox.confirm("确认删除后无法恢复, 是否继续?", "提示", {
             confirmButtonText: "确定",
             cancelButtonText: "取消",
             type: "warning"

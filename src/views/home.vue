@@ -17,31 +17,32 @@
     <el-container>
       <!-- 右侧头部 -->
       <el-header>
-        <el-row>
+        <el-row v-if="weather">
           <el-col :span="1" class="cl-col-span-1">
             <img src="../assets/image/menu.png" alt class="head-icon" />
           </el-col>
           <el-col :span="4" class="weather" v-if="weather">
-            <span class="weather-span">
-              <span>{{weather.city}}</span>
+            <div class="weather-span">
+              <span class="first">{{weather.city}}</span>
               <i class="el-icon-position"></i>
-            </span>
-            <span class="weather-span">
-              <img :src="weather.weatherimg" alt="天气" style="width:40px;height:40px;" />
-            </span>
-            <span class="weather-span">
-              <div>{{weather.weather}}</div>
-              <span>{{weather.today}}</span>
-            </span>
+            </div>
+            <!-- 显示天气图片 -->
+            <div class="weather-span">
+              <img :src="imgw[weaindex].src" alt="天气" style="width:30px;height:30px;" />
+            </div>
+            <div class="weather-span">
+              <div class="first">{{weather.wea}}</div>
+              <div>{{weather.week}}</div>
+            </div>
             <img
               src="@/assets/image/wind.png"
               alt
-              style="width:20px;height:20px;padding:0px 5px 0 5px;"
+              style="width:20px;height:20px;padding:0px 10px 0 0px;"
             />
-            <span class="weather-span" style="width:50px;margin-right:5px">
-              <div>{{weather.wd}}</div>
-              <span>{{weather.wden}}</span>
-            </span>
+            <div class="weather-span">
+              <div class="first">{{weather.win}}</div>
+              <div>{{weather.wden}}</div>
+            </div>
           </el-col>
           <el-col :span="12">
             <!-- users搜索框 -->
@@ -54,6 +55,7 @@
               @clear="clearsea"
               @keyup.native.13="searchkey"
               @focus="Shistory"
+              :disabled="isinput"
             >
               <el-button slot="append" icon="el-icon-search" @click="searchdata"></el-button>
             </el-input>
@@ -76,8 +78,32 @@
           <el-col :span="7">
             <div class="block">
               <el-badge is-dot class="badge-item">
-                <img src="../assets/image/msg.png" alt class="head-icon" />
+                <img src="../assets/image/msg.png" alt class="head-icon" @click="msgprompt" />
               </el-badge>
+              <!-- 通知提示框 -->
+              <transition name="Msg">
+                <div class="prompt-dis" v-if="promptVisible">
+                  <div class="Button--plain">
+                    <span class="arrow"></span>
+                    <img src="@/assets/image/prompt.png" alt />
+                    公告栏
+                  </div>
+                  <div class="Messages-list">
+                    <div>
+                      <img src="@/assets/image/tv.png" alt />
+                    </div>
+                    <div>
+                      <span class="Message-content">本系统目前正处于测试阶段，如果您有什么好的建议，欢迎留言!</span>
+                    </div>
+                  </div>
+                  <div class="Message-bottom" @click="toleave">
+                    <i class="el-icon-edit"></i>
+                    写留言
+                  </div>
+                </div>
+              </transition>
+
+              <!--用户头像，退出登录选项 -->
               <el-dropdown @command="handleCommand" v-if="userinfo">
                 <div class="avatar">
                   <el-avatar
@@ -114,10 +140,12 @@
 import navigation from "../components/home/navigation"
 import { mapActions, mapState } from "vuex"
 import { finddata } from "@/common/crod/index"
+import { request } from "@/network/request"
 
 export default {
   data() {
     return {
+      isinput:true,
       username: "",
       // 导航栏数据
       navs: null,
@@ -132,7 +160,18 @@ export default {
       history: false,
       hisvalue: null,
       // 控制刚开始登录弹窗只出现一次
-      flag: false
+      flag: false,
+      imgw: [
+        { src: require("@/assets/image/yin.png") },
+        { src: require("@/assets/image/yu.png") },
+        { src: require("@/assets/image/yun.png") },
+        { src: require("@/assets/image/wind.png") },
+        { src: require("@/assets/image/qing.png") }
+      ],
+      weaimg: ["yin", "yu", "yun", "wind", "qing"],
+      weaindex: null,
+      // 公告栏
+      promptVisible: false
     }
   },
   components: {
@@ -150,6 +189,24 @@ export default {
     // 获取当前用户数据
     this.getuserinfo()
     // 当前用户权限
+  },
+  mounted() {
+    document.addEventListener("click", e => {
+      if (e.target.className === "head-icon"||e.target.className === "prompt-dis") {
+        this.promptVisible = true
+      }else{
+        this.promptVisible =false
+      }
+    })
+    //如果有报错可以写
+    // this.$nextTick(()=>{
+    //         document.addEventListener('click', (e)=> {
+    //         console.log(e.target)
+    //         if (e.target.className != 'modalDiaLog') {
+    //             this.dialog = false;
+    //         }
+    //     })
+    // })
   },
   methods: {
     // 映射actions中的方法
@@ -199,12 +256,18 @@ export default {
     },
     // 获取当天天气
     async getweather() {
-      const { data: res } = await this.$http.get(
-        "http://api.help.bj.cn/apis/weather/?id=101280101"
-      )
-      res.today = res.today.split(" ")[1]
+      const { data: res } = await request({
+        params: {
+          version: "v6",
+          appid: "34769248",
+          appsecret: "k1kDNkh9",
+          vue: "1"
+        }
+      })
       this.weather = res
-      // console.log(this.weather);
+      this.weaindex = this.weaimg.findIndex(item => {
+        return item == res.wea_img
+      })
     },
     // 提示用户的消息
     async getuserinfo() {
@@ -247,11 +310,8 @@ export default {
     },
     // 显示历史搜索框
     Shistory() {
-      const reg = /^[p|i].*$/
-      console.log(reg.test(this.pathtitle))
-      if (!reg.test(this.pathtitle)) {
-        return this.$message.error("当前页面不可搜索！")
-      }
+      
+      this.isinput =false
       this.history = true
     },
     // 添加历史记录
@@ -264,7 +324,6 @@ export default {
     },
     // 点击搜索记录搜索
     handleseach(value) {
-      console.log(123, value)
       this.searchval = value
       this.realsearch()
       this.history = false
@@ -272,8 +331,6 @@ export default {
     },
     // 删除搜索历史
     async deletehis(id) {
-      console.log(123)
-
       const { data: res } = await this.$http.delete("/home/shistory", {
         params: { id, username: this.username }
       })
@@ -294,6 +351,14 @@ export default {
     // 隐藏历史搜索框
     hidehis() {
       this.history = false
+    },
+    msgprompt() {
+      this.promptVisible = !this.promptVisible
+    },
+    // 留言
+    toleave() {
+      this.$router.push("/wlecome")
+      this.promptVisible = false
     }
   },
   computed: {
@@ -311,10 +376,20 @@ export default {
       )
     },
     ...mapState(["status"])
+  },
+  watch:{
+    pathtitle(newval){
+      const reg = /^[p|i].*$/
+      if (!reg.test(newval)) {
+        return this.isinput = true
+      }else{
+        return this.isinput = false
+      }
+    }
   }
 }
 </script>
-<style >
+<style lang="scss" >
 .el-container {
   height: 100vh;
   width: 100vw;
@@ -340,9 +415,11 @@ export default {
   letter-spacing: 2px;
 }
 .weather-span {
-  display: inline-block;
-  width: 40px;
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
   text-align: center;
+  margin: 0 10px 5px 0;
 }
 /* 左部侧栏 */
 .el-aside {
@@ -361,6 +438,9 @@ export default {
 .el-avatar {
   background: #ffffff;
 }
+.el-avatar > img {
+  width: 100%;
+}
 .el-header .block .avatar {
   display: flex;
   align-items: center;
@@ -378,6 +458,10 @@ export default {
   width: 30px;
   height: 30px;
   padding-top: 5px;
+  cursor: pointer;
+}
+.el-dialog__body {
+  padding: 15px 20px !important;
 }
 
 /* 主体部分样式 */
@@ -397,30 +481,23 @@ export default {
   right: 6px;
   top: 3px;
 }
-.el-avatar > img {
-  width: 100%;
-}
+
 /* .el-aside{
   min-width: 180px;
   max-width: 180px;
 } */
 /* 右侧导航栏图片 */
 /* 动画  性能低已弃用*/
-.router-enter {
+.Msg-enter {
   opacity: 0;
-  position: absolute;
-  transform: translateX(20%);
 }
-.router-leave-to {
+.Msg-leave-to {
   opacity: 0;
-  transform: translateY(20%);
-  position: absolute;
-  z-index: 0;
-  width: 1306px;
+  transform: translateY(-10%);
 }
-.router-enter-active,
-.router-leave-active {
-  transition: all 0.8s ease;
+.Msg-enter-active,
+.Msg-leave-active {
+  transition: all 0.5s ease;
 }
 /* 搜索历史 */
 .Shistory {
@@ -458,8 +535,90 @@ export default {
   position: fixed;
   z-index: 99;
 }
+.el-icon-close:hover{
+  color:#00a1d6;
+}
 .bestup {
   position: relative;
   z-index: 9999;
+}
+/* 通知 */
+.prompt-dis {
+  position: fixed;
+  top: 60px;
+  right: 35px;
+  width: 360px;
+  background: #fff;
+  border: 1px solid #ebebeb;
+  border-radius: 4px;
+  -webkit-box-shadow: 0 5px 20px rgba(26, 26, 26, 0.1);
+  box-shadow: 0 5px 20px rgba(26, 26, 26, 0.1);
+  z-index: 203;
+  .Button--plain {
+    border-bottom: 1px solid #ebebeb;
+    height: 45px;
+    font-size: 14px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .arrow {
+      position: absolute;
+      width: 32px;
+      height: 16px;
+      overflow: hidden;
+      top: -16px;
+      left: 50%;
+    }
+    .arrow::after {
+      content: "";
+      display: inline-block;
+      width: 33px;
+      height: 33px;
+      border: #ebebeb 1px solid;
+      background: #fff;
+      transform: rotate(52deg);
+      position: relative;
+      top: 10px;
+    }
+    img {
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+    }
+  }
+  .Messages-list {
+    padding: 15px;
+    display: flex;
+    img {
+      width: 40px;
+      height: 40px;
+      margin-right: 10px;
+    }
+    .Message-content {
+      line-height: 20px;
+      color: #8590a6;
+      font-size: 14px;
+    }
+  }
+  .Message-bottom {
+    border-top: 1px solid #ebebeb;
+    cursor: pointer;
+    height: 35px;
+    line-height: 35px;
+    color: #8590a6;
+    text-align: center;
+  }
+  .Message-bottom:hover {
+    color: #000;
+  }
+}
+.prompt-mes {
+  width: 30px;
+  height: 35px;
+  color: #67c23a;
+  background: #ffffff;
+  font-size: 25px;
+  text-align: center;
 }
 </style>

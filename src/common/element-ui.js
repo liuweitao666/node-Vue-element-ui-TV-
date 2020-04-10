@@ -45,6 +45,8 @@ import {
     Step,
     Tabs,
     TabPane,
+    Timeline,
+    TimelineItem
 } from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css';
 
@@ -90,6 +92,8 @@ Vue.use(Steps)
 Vue.use(Step)
 Vue.use(Tabs)
 Vue.use(TabPane)
+Vue.use(Timeline)
+Vue.use(TimelineItem)
 
 Vue.prototype.$notify = Notification
 Vue.prototype.$message = Message

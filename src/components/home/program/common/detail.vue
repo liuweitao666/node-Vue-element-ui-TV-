@@ -5,7 +5,7 @@
       <el-row :gutter="20">
         <el-col :span="17" class="video">
           <el-alert title="友情提示：如未自动播放请手动点击播放按钮并耐心等待" type="warning" show-icon class="alert"></el-alert>
-          <div @click="clearVideo">
+          <div @click="clearVideo" class="video">
             <iframe
               width="100%"
               height="680px"
@@ -22,6 +22,14 @@
               webkitallowfullscreen="webkitallowfullscreen"
               v-if="src"
             ></iframe>
+            <!-- <div id="player"></div> -->
+
+            <!-- <iframe
+              height="680"
+              width="100%"
+              src="https://player.youku.com/embed/XNDM0MDc4NzIyNA==?client_id=5a73c0df8eb0d91d"
+              frameborder="0"
+            ></iframe>-->
           </div>
 
           <!-- 视频详细信息 -->
@@ -92,8 +100,14 @@
               <div class="page-head">
                 <div class="sort">
                   <div class="sort-time">
-                    <span :class="{'sactive':sortactive}" @click="sortact('time')">按时间排序</span>
-                    <span :class="{'sactive':!sortactive}" @click="sortact('hot')">按热度排序</span>
+                    <div :class="{'sactive':sortactive}" @click="sortact('time')">
+                      按时间排序
+                      <span class="san" v-if="sortactive"></span>
+                    </div>
+                    <div :class="{'sactive':!sortactive}" @click="sortact('hot')">
+                      按热度排序
+                      <span class="san" v-if="!sortactive"></span>
+                    </div>
                   </div>
                 </div>
                 <div class="sort-page">
@@ -125,7 +139,7 @@
                   <button class="comment-submit" @click="submitcom">发表评论</button>
                 </div>
               </div>
-              <comments :comments="comments" :title="title" v-if="title" />
+              <comments :comments="comments" :title="title" :avatar="avatar" v-if="title" />
               <el-pagination
                 background
                 layout="prev, pager, next,jumper"
@@ -191,6 +205,15 @@
     </el-card>
   </div>
 </template>
+<script src="//player.polyv.net/script/player.js"></script>
+            <script>
+var player = polyvPlayer({
+  wrap: "#player",
+  width: 800,
+  height: 533,
+  vid: "e785b2c81c9e018296671a1287e99615_e"
+})
+</script>
 <script>
 import { mapActions, mapState } from "vuex"
 import comments from "./comments"
@@ -218,7 +241,8 @@ export default {
       pagenum: 1,
       total: 0,
       sortactive: true,
-      sort:'time'
+      sort: "time",
+      avatar:null
     }
   },
   components: {
@@ -247,6 +271,7 @@ export default {
       }
       // 为详细节目信息赋值
       this.list = res.data[0]
+      this.clearVideo()
       let title = res.data[0].title
       // 获取播放链接
       const { data: src } = await this.$http.get("/home/video", {
@@ -281,7 +306,9 @@ export default {
       const { data: res } = await this.$http.get("/home/program/comments", {
         params: { title: this.title, id: this.id }
       })
-      this.total = res.data.length
+      if (res.data.length) {
+        this.total = res.data.length
+      }
       let comment
       // 判断是否该节目是否有评论存在
       if (res.code === 1) {
@@ -329,7 +356,7 @@ export default {
       if (res.code === 1) {
         this.timer = setInterval(() => {
           this.time += 5
-        }, 2000)
+        }, 5000)
       }
     },
     // 清除定时器并发送网络请求
@@ -508,7 +535,6 @@ export default {
   position: relative;
 }
 .bg {
-
   background-size: cover;
   height: 300px;
   filter: blur(20px);
@@ -679,7 +705,7 @@ export default {
   color: #222;
   line-height: 24px;
   padding-left: 15px;
-  padding-top:10px;
+  padding-top: 10px;
   border-bottom: 1px solid #e5e5e5;
   margin-bottom: 20px;
   .page-head {
@@ -693,13 +719,14 @@ export default {
       align-items: center;
       top: 1px;
       .sort-time {
-        span {
+        div {
           display: inline-block;
           margin-right: 15px;
           font-size: 14px;
           padding: 0px 3px 8px;
           font-weight: 700;
           cursor: pointer;
+          position: relative;
         }
       }
     }
@@ -711,6 +738,18 @@ export default {
 .sactive {
   border-bottom: 1px solid #00a1d6;
   color: #00a1d6;
+  padding-left: 6px;
+}
+.san {
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  transform: translateX(-50%);
+  display: inline-block;
+  border: solid #00a1d6 3px;
+  border-top: 3px transparent dashed;
+  border-left: 3px transparent dashed;
+  border-right: 3px transparent dashed;
 }
 .comment-send {
   display: flex;

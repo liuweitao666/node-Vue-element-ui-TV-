@@ -1,22 +1,23 @@
 <template>
   <div class="block">
     <div class="history">
-      <i class="el-icon-pie-chart"></i>
-      <span>观看历史</span>
+      <div>
+        <i class="el-icon-pie-chart"></i>
+        <span>观看历史</span>
+      </div>
+      <div class="delall" @click="delall">
+        <i class="el-icon-close"></i>
+        <span>清空历史</span>
+      </div>
     </div>
-    <div class="program-list" v-if="programs">
+    <div class="program-list" v-if="programs.length>0">
       <div
         :class="['program',{'hidelist':hidelist===index}]"
         v-for="(item,index) in programs"
         :key="index"
       >
-        <div class="imgccover"  @click="goplay(item._id,item.path)">
-          <img
-            :src="'http://127.0.0.1:3000'+item.cover"
-            :alt="item.title"
-            class="proimg"
-           
-          />
+        <div class="imgccover" @click="goplay(item._id,item.path)">
+          <img :src="'http://127.0.0.1:3000'+item.cover" :alt="item.title" class="proimg" />
           <!-- <div class="hidearea">
             <span>导演：{{item.director}}</span>
             <span>主演：{{item.star}}</span>
@@ -47,17 +48,19 @@
   </div>
 </template>
 <script>
-import { mapState } from "vuex";
+import { mapState } from "vuex"
+import { deleted } from "@/common/crod/index"
 export default {
   data() {
     return {
       // 动画效果
       hidelist: -1,
-      none:false,
-      programs:null
-    };
+      none: false,
+      programs: null
+    }
   },
   created() {
+    // 获取历史记录
     this.programs = this.pro
   },
   props: {
@@ -72,33 +75,43 @@ export default {
   methods: {
     // 删除记录
     async remove(id, index) {
-
       const { data: res } = await this.$http.delete("/home/rehistory", {
         params: { _id: id, id: this.id }
-      });
+      })
       if (res.code === 1) {
-        this.hidelist = index;
-        let i =index
+        this.hidelist = index
+        let i = index
         setTimeout(() => {
-           this.programs = this.programs.filter((item,index)=>{
-             return index !==i
-           })
-           console.log(this.programs)
-        }, 1000);
+          this.programs = this.programs.filter((item, index) => {
+            return index !== i
+          })
+        }, 1000)
       }
     },
+    // 跳转到详情页
     goplay(id, title) {
-      console.log(id, title);
-      this.$router.push({ path: "/detail", query: { id, title } });
+      this.$router.push({ path: "/detail", query: { id, title } })
+    },
+    // 清空历史
+    async delall() {
+      console.log(this.programs)
+      if(this.programs.length===0) return this.$message.warning('当前没有还没有观看记录！')
+      const code = await deleted("/home/rehistory", {
+        id: this.userinfo._id,
+        type: "all"
+      })
+      if (code === 1) {
+        this.programs = []
+      }
     }
   },
   computed: {
-    ...mapState(["status"]),
+    ...mapState(["status", "userinfo"])
     // programs(){
     //   return this.pro
     // }
   }
-};
+}
 </script>
 <style scoped>
 .block {
@@ -108,6 +121,16 @@ export default {
   margin-bottom: 15px;
   font-size: 15px;
   font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.delall {
+  font-weight: 500;
+  font-size: 13px;
+  padding-right: 20px;
+  color: #999;
+  cursor: pointer;
 }
 .history span {
   display: inline-block;

@@ -123,7 +123,7 @@ export default {
   right: 120px;
   top: 0;
   height: 430px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
 }
 /* li样式 */
 .side .side-item {

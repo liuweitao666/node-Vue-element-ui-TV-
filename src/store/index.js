@@ -9,7 +9,6 @@ const store = new Vuex.Store({
         // 请求节目列表数据
         queryinfo: {
             title: '',
-            pagesize: 12,
             pagenum: 1,
             id: "",
             name: '',
@@ -19,7 +18,9 @@ const store = new Vuex.Store({
         programlist: null,
         username: '',
         status: 1,
-        userinfo: null
+        userinfo: null,
+        // 全局保存节目
+        Allprogram: null
     },
     mutations: {
         getprogramlist(state, params, ) {
@@ -30,13 +31,17 @@ const store = new Vuex.Store({
         editstatus(state, status) {
             state.status = status
         },
-        saveuserinfo(state,userinfo) {
+        saveuserinfo(state, userinfo) {
             userinfo.program.reverse()
             state.userinfo = userinfo
         },
         // 更改排序方式
         editsort(state, type) {
             state.queryinfo.sort = type
+        },
+        // 全局保存所有节目
+        saveprogramAll(state, program) {
+            state.Allprogram = program
         }
     },
     actions: {
@@ -47,7 +52,7 @@ const store = new Vuex.Store({
                 axios.get("/home/program", {
                     params: state.queryinfo
                 }).then(res => {
-                
+
                     resolve(res)
                 }).catch(err => {
                     reject(err)
@@ -60,7 +65,38 @@ const store = new Vuex.Store({
         },
         // 
         asyncuserinfo({ commit }, userinfo) {
-            commit('saveuserinfo',userinfo)
+            commit('saveuserinfo', userinfo)
+        },
+        // 保存所有节目
+        async saveallpro({ commit }) {
+            let program = []
+            const { data: Video } = await axios.get("/home/video", {
+                params: { type: "all" }
+            })
+            const { data: res } = await axios.get("/home/program")
+            // 保存所有的节目数据
+            res.data.forEach(async item => {
+                program.push(...item.data)
+            })
+            // 把对应的Src链接保存到对应的节目中
+            Video.data.forEach(item => {
+                let title = item.title
+                let Src = item.Src
+                let path = item.type
+                program.forEach(programs => {
+                    if (title === programs.title) {
+                     
+                        programs.Src = Src
+                        programs.path = path
+                    }
+                })
+            })
+            // 对节目按热度排序
+            program.sort((a, b) => {
+                return b.hot - a.hot
+            })
+            
+            commit('saveprogramAll',program)
         }
     },
     getters: {

@@ -71,7 +71,17 @@ export function regusername(callback, username) {
         } else if (regusername.test(username)) {
             callback(1)  //1
         } else {
-            return callback && callback(3)  //3
+            const regemail = /^[A-Za-z0-9\u4e00-\u9fa5]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
+            if (regemail.test(username)) {
+                return callback(1)
+            } else if (username.length === 0) {
+                return callback(8)
+            } else if (!username.includes('@')) {
+                return callback(7)  //7
+            } else {
+                return callback(6)  //6
+            }
+            // return callback && callback(3)  //3
         }
     }
 }

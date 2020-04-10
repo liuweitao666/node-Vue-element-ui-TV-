@@ -8,41 +8,42 @@
     </el-breadcrumb>
     <!-- 主题部分 -->
     <el-card>
-      <programList  :programlist ="programlist"/>
+      <programList :programlist="programlist" v-if="programlist"/>
+     
     </el-card>
   </div>
 </template>
 <script>
-import programList from "./common/programlist";
-import { mapActions } from 'vuex'
+import programList from "./common/programlist"
+import { mapActions } from "vuex"
 export default {
   data() {
     return {
       // 保存电影数据
-      programlist:null,
-      name:''
-    };
+      programlist: null,
+      name: ""
+    }
   },
   components: {
     programList
   },
   created() {
-    this.getprogramlist();
+    this.getprogramlist()
   },
   methods: {
-    ...mapActions([
-      'getlist'
-    ]),
+    ...mapActions(["getlist"]),
     // 获取电影列表
     async getprogramlist() {
-      const {data:res} = await this.getlist({title:this.$route.path.slice(1),name:this.name});
-      if (res.code !== 1) return this.$message.error(res.msg);
-      this.programlist = res.data;
+      const { data: res } = await this.getlist({
+        title: this.$route.path.slice(1),
+        name: this.name
+      })
+      if (res.code !== 1) return this.$message.error(res.msg)
+      this.programlist = res.data
       // console.log(res)
-    },
-
+    }
   }
-};
+}
 </script>
 <style scoped>
 </style>

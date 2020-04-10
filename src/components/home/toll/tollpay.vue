@@ -34,7 +34,7 @@
             <div class="avatar">
               <img :src="'http://127.0.0.1:3000'+avatar" alt class="avatar-img" />
               <div class="martop">
-                <span>{{username}}</span>
+                <span>{{userinfo.username}}</span>
               </div>
             </div>
             <div class="progress">
@@ -48,7 +48,7 @@
             <span>尊贵的管理员，您可以免费使用！</span>
           </div>
           <div class="expense" v-else>
-            <span>尊敬的用户，{{username}}</span>
+            <span>尊敬的用户，{{userinfo.username}}</span>
           </div>
           <div class="expense">
             <span>您当月已欠费：{{price}}元(RMB)</span>
@@ -148,7 +148,7 @@ export default {
       if (price) {
         const { data: res } = await this.$http.put("/home/pay", {
           price,
-          username: this.username
+          username: this.userinfo.username
         });
         if (res.code !== 1) {
           return this.$message.error(res.msg);
@@ -219,7 +219,7 @@ export default {
 }
 .contain img {
   width: 100%;
-  height: 199px;
+  height: 204px;
 }
 /* 缴费 */
 .monipay {

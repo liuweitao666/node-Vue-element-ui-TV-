@@ -17,6 +17,7 @@ const tolluser = () => import('../components/home/toll/tolluser')
 const devicetv = () => import('../components/home/device/devicetv')
 const detail = ()=>import('../components/home/program/common/detail')
 const addprogram = ()=>import('../components/home/program/addprogram/addgram')
+const channel = ()=>import('../components/home/program/channel')
 
 // 挂载路由
 Vue.use(VueRouter)
@@ -64,6 +65,9 @@ const routes = [
             },
             {
                 path:'/addprogram',component:addprogram
+            },
+            {
+                path:'/channel',component:channel
             },
             // 报表管理路由
             {

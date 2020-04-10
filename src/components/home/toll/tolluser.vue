@@ -58,6 +58,7 @@ export default {
       const { data: res } = await finddata("/home/users", {
         username: this.username
       });
+      console.log(res)
       this.programs = res[0].program.reverse();
       // 用户总时间
       this.time = res[0].minutes;

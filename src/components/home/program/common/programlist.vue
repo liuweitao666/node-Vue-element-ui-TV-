@@ -39,7 +39,7 @@
     <!-- 节目内容区域 -->
     <div class="list">
       <div
-        v-for="(item,index) in programlist"
+        v-for="(item,index) in prolist"
         :key="item.id"
         class="list-block"
         @click="goplay(item._id,item.hot)"
@@ -92,11 +92,21 @@
         <div class="bottom-btn" v-else>{{item.subtitle}}</div>
       </div>
     </div>
+    <!-- 分页区域 -->
+    <el-pagination
+      background
+      layout="prev, pager, next,jumper"
+      hide-on-single-page
+      :total="total"
+      :page-size="pagesize"
+      @current-change="handleCurrentChange"
+      class="page"
+    ></el-pagination>
   </div>
 </template>
 <script>
-import { deleted } from "@/common/crod/index";
-import { mapState } from "vuex";
+import { deleted } from "@/common/crod/index"
+import { mapState } from "vuex"
 export default {
   data() {
     return {
@@ -140,7 +150,6 @@ export default {
       // 节目信息请求体
       queryinfo: {
         title: this.$route.path.substr(1),
-        pagesize: 12,
         pagenum: 1,
         id: ""
       },
@@ -158,8 +167,11 @@ export default {
       sortClass: 0,
       sta: null,
       videoid: "",
-      hover: -1
-    };
+      hover: -1,
+      prolist: null,
+      pagenum: 1,
+      pagesize: 6
+    }
   },
   props: {
     programlist: {
@@ -168,8 +180,7 @@ export default {
     }
   },
   created() {
-      console.log(this.program.data.title)
-
+    this.handlepage()
   },
   methods: {
     // 添加/更新节目内容，发送网络请求
@@ -177,20 +188,20 @@ export default {
       this.$router.push({
         path: "/addprogram",
         query: { title: this.$route.path.substr(1) }
-      });
-      this.type = "save";
+      })
+      this.type = "save"
       // this.dialogAdd = true;
     },
     // 删除节目数据
-    async deleted(id,title) {
+    async deleted(id, title) {
       const code = await deleted("/home/program", {
         title: this.program.title,
         id,
-        stitle:title
-      });
+        stitle: title
+      })
       if (code === 1) {
         // 调用父组件的方法
-        this.parent.getprogramlist();
+        this.parent.getprogramlist()
       }
     },
     // 根据id查询指定数据
@@ -198,29 +209,43 @@ export default {
       this.$router.push({
         path: "/addprogram",
         query: { title: this.path, id }
-      });
+      })
     },
     // 排序方法
-    sortpro(index, type) {
-      this.sortClass = index;
-      this.$store.commit("editsort", type);
-      this.parent.getprogramlist();
+    async sortpro(index, type) {
+      this.sortClass = index
+      this.$store.commit("editsort", type)
+      await this.parent.getprogramlist()
+      this.handlepage()
     },
     // 动画
     hovers(index) {
-      this.hover = index;
+      this.hover = index
     },
     remove() {
-      this.hover = -1;
+      this.hover = -1
     },
     // 跳转到播放页面
-    async goplay(id,hot) {
+    async goplay(id, hot) {
       const { data: res } = await this.$http.put("/home/program/hot", {
         id,
         hot
-      });
-      if(res.code!==1) return this.$message.error('服务器出错，请稍后再试！！')
-      this.$router.push({ path: "/detail", query: { id, title: this.path } });
+      })
+      if (res.code !== 1) return this.$message.error("服务器出错，请稍后再试！！")
+      
+      this.$router.push({ path: "/detail", query: { id, title: this.path } })
+    },
+    // 分页方法
+    handlepage() {
+      this.prolist = this.programlist.slice(
+        (this.pagenum - 1) * this.pagesize,
+        this.pagenum * this.pagesize
+      )
+    },
+    // 跳转页面
+    handleCurrentChange(val) {
+      this.pagenum = val
+      this.handlepage()
     }
   },
   computed: {
@@ -229,10 +254,18 @@ export default {
     //   return this.$store.getters.programlist;
     // }
     path() {
-      return this.$route.path.slice(1);
+      return this.$route.path.slice(1)
+    },
+    total() {
+      return this.programlist.length
+    }
+  },
+  watch: {
+    programlist () {
+      this.handlepage()
     }
   }
-};
+}
 </script>
 <style scoped>
 .sort {
@@ -246,7 +279,7 @@ export default {
   overflow: auto;
   font-size: 13px;
   margin-left: 2px;
-  color: #303133
+  color: #303133;
 }
 .list-block {
   margin: 10px 10px 5px;
@@ -298,18 +331,18 @@ export default {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 14px;
-  text-align: left
+  text-align: left;
 }
 .bottom-btn {
   width: 120px;
   text-align: left;
-  padding:0 10px;
+  padding: 0 10px;
   color: #999;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.bottom-btn-ad{
+.bottom-btn-ad {
   display: flex;
   justify-content: space-around;
 }
@@ -359,5 +392,9 @@ export default {
   position: absolute;
   right: 0;
   bottom: 0;
+}
+/* 分页 */
+.page {
+  margin-top: 20px;
 }
 </style>

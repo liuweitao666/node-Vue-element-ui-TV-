@@ -174,7 +174,6 @@ export default {
       const file = e.target.files[0]; //获取到当前文件对象
       // 传递一个 FormData 对象 即可
       let formData = new FormData();
-      console.log(file);
       formData.append("avatar", file); // 'file' 可变 相当于 input 表单的name 属性
       formData.append("username", this.currentuser.username);
       // 服务器只需按照正常的上传程序代码即可

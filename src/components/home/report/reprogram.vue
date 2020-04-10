@@ -127,7 +127,7 @@ export default {
           data: [5, 10, 8, 7],
           itemStyle: {
             barBorderRadius: [5, 5, 0, 0],
-            color: "#489CF7"
+            color: "#227BFF"
           }
         },
         {
@@ -136,7 +136,7 @@ export default {
           data: [5, 12, 6, 9],
           itemStyle: {
             barBorderRadius: [5, 5, 0, 0],
-            color: "#e6a23c"
+            color: "#FCB24B"
           }
         }
       ]

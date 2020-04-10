@@ -65,7 +65,7 @@ export default {
         { thumbs: require("@/assets/image/comment/dactive.png") },
         { thumbs: require("@/assets/image/comment/Cactive.png") }
       ],
-
+      
     }
   },
   props: {

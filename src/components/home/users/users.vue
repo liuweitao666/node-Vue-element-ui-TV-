@@ -9,15 +9,18 @@
     <el-card>
       <el-button type="primary" class="add-btn">添加用户</el-button>
       <!-- 展示用户信息表格区域 -->
-      <el-table :data="usersdata" stripe style="width: 100%" border>
-        <el-table-column type="index" label="#"></el-table-column>
+      <el-table :data="usersdata" stripe style="width: 100%">
+        <el-table-column type="index" label="序号"></el-table-column>
         <el-table-column prop="username" label="用户名" width="120px"></el-table-column>
+        <el-table-column label="头像" width="80px">
+          <template slot-scope="scope">
+            <img :src="'http://127.0.0.1:3000'+scope.row.avatar" alt class="showavatar" />
+          </template>
+        </el-table-column>
         <el-table-column prop="email" label="邮箱"></el-table-column>
         <el-table-column prop="phone" label="手机"></el-table-column>
         <el-table-column prop="minute" label="欠费金额" width="80px">
-          <template slot-scope="scope">
-            {{scope.row.status===1?'免费使用':scope.row.minute}}
-          </template>
+          <template slot-scope="scope">{{scope.row.status===1?'免费使用':scope.row.minute}}</template>
         </el-table-column>
         <el-table-column label="性别" width="50px">
           <template slot-scope="scope">
@@ -30,7 +33,7 @@
             <div v-else>{{scope.row.status===1?'管理员':scope.row.status===0?'普通用户':'违规用户'}}</div>
           </template>
         </el-table-column>
-        <el-table-column label="创建日期">
+        <el-table-column label="注册时间">
           <template slot-scope="scope">{{scope.row.createdate | dateformat()}}</template>
         </el-table-column>
         <el-table-column label="操作">
@@ -95,13 +98,13 @@
             <el-form-item label="邮箱" prop="email">
               <el-input v-model="updateuser.email" class="editinp"></el-input>
             </el-form-item>
-            <el-form-item label="手机" >
+            <el-form-item label="手机">
               <el-input v-model="updateuser.phone" class="editinp"></el-input>
             </el-form-item>
-            <el-form-item label="gender" >
+            <el-form-item label="gender">
               <el-input v-model="updateuser.gender" class="editinp"></el-input>
             </el-form-item>
-            <el-form-item label="region" >
+            <el-form-item label="region">
               <el-input v-model="updateuser.region" class="editinp"></el-input>
             </el-form-item>
           </div>
@@ -128,9 +131,9 @@
   </div>
 </template>
 <script>
-      // res[0].status =  res[0].status ===0 ?'普通用户':(res[0].status ===1 ?'管理员':'禁止登录')
-      // res[0].status =  res[0].username === 'Asunat'?'超级管理员': res[0].status
-import { finddata, deleted } from "../../../common/crod/index";
+// res[0].status =  res[0].status ===0 ?'普通用户':(res[0].status ===1 ?'管理员':'禁止登录')
+// res[0].status =  res[0].username === 'Asunat'?'超级管理员': res[0].status
+import { finddata, deleted } from "../../../common/crod/index"
 export default {
   data() {
     return {
@@ -175,33 +178,33 @@ export default {
         {
           value: "2",
           label: "禁止登录"
-        },
+        }
       ]
-    };
+    }
   },
   created() {
-    this.getusers();
-    this.emitevent();
+    this.getusers()
+    this.emitevent()
   },
   methods: {
     // 发送请求获取用户数据
     async getusers() {
-      const res = await finddata(this.finuser, this.queryinfo);
+      const res = await finddata(this.finuser, this.queryinfo)
       if (res.code == 5)
         return this.$message({
           showClose: true,
           message: res.msg,
           duration: 1500,
           type: "error"
-        });
+        })
       if (res.code == 1) {
-        this.usersdata = res.data;
-        this.total = res.total;
+        this.usersdata = res.data
+        this.total = res.total
       }
     },
     // 向home页面发送请求路径
     emitevent() {
-      this.$emit("finduser", this.finuser);
+      this.$emit("finduser", this.finuser)
     },
     // 根据id获取某一条数据
     async edituser(id) {
@@ -209,68 +212,65 @@ export default {
         query: { _id: id },
         limit: "",
         pagenum: 1
-      });
+      })
       if (res.code == 5)
         return this.$message({
           showClose: true,
           message: res.msg,
           duration: 1500,
           type: "error"
-        });
-      
-      this.updateuser = res[0];
-      this.upstatus = "";
+        })
+
+      this.updateuser = res[0]
+      this.upstatus = ""
       // console.log(this.upstatus);
-      this.dialogEdit = true;
+      this.dialogEdit = true
     },
     // 监听每页显示多少条
     handleSizeChange(val) {
-      this.queryinfo.limit = val;
-      this.getusers();
+      this.queryinfo.limit = val
+      this.getusers()
     },
     // 监听当前页的变化
     handleCurrentChange(val) {
-      this.queryinfo.pagenum = val;
-      this.getusers();
+      this.queryinfo.pagenum = val
+      this.getusers()
     },
     // 删除用户
     async removeuser(id) {
       // 判断是否删除成功
-      const code = await deleted(this.finuser, { _id: id });
+      const code = await deleted(this.finuser, { _id: id })
       if (code === 1) {
-        this.getusers();
+        this.getusers()
       }
     },
     // 更新用户
     async Edituser() {
       // 发送网路请求
-      const { data: res } = await this.$http.post(
-        this.finuser,
-        this.updateuser
-      );
+      const { data: res } = await this.$http.post(this.finuser, this.updateuser)
       console.log(res)
       if (res.code !== 1)
         return this.$message({
           message: res.msg,
           duration: 1500,
           type: "error"
-        });
+        })
       this.$message({
         type: "success",
         message: res.msg,
         duration: 1500
-      });
-      this.getusers();
-      this.dialogEdit = false;
+      })
+      this.getusers()
+      this.dialogEdit = false
     },
     // 判断是否显示更改权限
     async editstatus(id) {
-      await this.edituser(id);
-      this.dialogEdit = true;
-      this.upstatus = "status";
+      await this.edituser(id)
+      this.dialogEdit = true
+      this.upstatus = "status"
     }
   }
-};
+}
 </script>
 <style scoped>
 .add-btn {
@@ -291,5 +291,11 @@ body .el-table th.gutter {
 .editinp-dis {
   border: none;
   width: 80px;
+}
+.showavatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 5px;
+  vertical-align: middle;
 }
 </style>

@@ -8,7 +8,7 @@
     </el-breadcrumb>
     <!-- 主题部分 -->
     <el-card>
-      <programList  :programlist ="programlist"/>
+      <programList  :programlist ="programlist" v-if="programlist"/>
     </el-card>
   </div>
 </template>
