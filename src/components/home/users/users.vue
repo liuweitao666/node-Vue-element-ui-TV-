@@ -7,7 +7,15 @@
       <el-breadcrumb-item>用户管理</el-breadcrumb-item>
     </el-breadcrumb>
     <el-card>
-      <el-button type="primary" class="add-btn">添加用户</el-button>
+      <div class="sort-user">
+        <div :class="{'Dactive':sortuser}" @click="sortUser(true,'entire')">
+          <span>全部用户</span>
+        </div>
+        <div :class="{'Dactive':!sortuser}" @click="sortUser(false,'common')">
+          <span>普通用户</span>
+        </div>
+        <div :class="['warp-user',{'warp-active':!sortuser}]"></div>
+      </div>
       <!-- 展示用户信息表格区域 -->
       <el-table :data="usersdata" stripe style="width: 100%">
         <el-table-column type="index" label="序号"></el-table-column>
@@ -138,12 +146,14 @@ export default {
   data() {
     return {
       usersdata: null,
+      sortuser: true,
       finuser: "/home/users",
       // 数据请求体
       queryinfo: {
         query: { username: "" },
         limit: 5,
-        pagenum: 1
+        pagenum: 1,
+        type:'entire'
       },
       // 全部数据条数
       total: null,
@@ -268,11 +278,18 @@ export default {
       await this.edituser(id)
       this.dialogEdit = true
       this.upstatus = "status"
+    },
+    // 切换查看普通用户
+    sortUser(flag,type){
+      this.queryinfo.type = type
+      this.sortuser = flag;
+      this.getusers()
+      console.log(flag)
     }
   }
 }
 </script>
-<style scoped>
+<style lang="scss" scoped>
 .add-btn {
   margin-bottom: 10px;
 }
@@ -297,5 +314,42 @@ body .el-table th.gutter {
   height: 35px;
   border-radius: 5px;
   vertical-align: middle;
+}
+/* 顶部筛选 */
+.sort-user {
+  width: 250px;
+  height: 30px;
+  line-height: 30px;
+  border-radius: 30px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  div {
+    font-size: 13px;
+    color: #00a1d6;
+    width: 50%;
+    text-align: center;
+    cursor: pointer;
+    transition: color 0.5s ease
+  }
+  .Dactive {
+    color: #ffffff;
+    position: relative;
+    z-index: 99;
+  }
+  .warp-user {
+    position: absolute;
+    transition: all 0.5s ease;
+    background: #00a1d6;
+    width: 50%;
+    height: 30px;
+    border-radius: 30px;
+    right:50%;
+  }
+  .warp-active{
+    right: 0;
+  }
 }
 </style>

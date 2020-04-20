@@ -74,7 +74,7 @@
           </el-form-item>
         </el-form>
       </div>
-      <span slot="footer" class="dialog-footer">
+      <span slot="footer" class="dialog-footer" v-if="!status">
         <el-button @click="comment = false" size="small">取 消</el-button>
         <el-button type="primary" @click="submitcontent" size="small">确 定</el-button>
       </span>
@@ -196,7 +196,7 @@ export default {
       this.comments.content.trim()
       const { data: res } = await this.$http.post("/comments", this.comments)
       if (res.code !== 1) return this.$message.error(res.msg)
-      this.comments = false
+      this.comment = false
       return this.$message({
         message: res.msg,
         type: "success"

@@ -17,7 +17,7 @@ const store = new Vuex.Store({
         // programlist 数据
         programlist: null,
         username: '',
-        status: 1,
+        status: 0,
         userinfo: null,
         // 全局保存节目
         Allprogram: null

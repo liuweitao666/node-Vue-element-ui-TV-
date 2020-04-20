@@ -11,7 +11,7 @@
     <el-row style="height:50px;">
       <!-- 添加节目 -->
       <el-col :span="3" style="display:flex; align-items:center;height:100%" v-if="status">
-        <el-button type="primary" icon="el-icon-plus" size="medium" @click="addfrom('save')">添加</el-button>
+        <el-button type="primary" icon="el-icon-plus" round size="medium" @click="addfrom('save')">添加</el-button>
       </el-col>
 
       <!-- 用户可以看到 -->

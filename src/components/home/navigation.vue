@@ -33,9 +33,10 @@
           <i :class="navIcons[index]"></i>
           <span>{{item.title}}</span>
         </template>
-        <el-menu-item :index="'/'+item.path" v-for="(item,index) in item.children" :key="index" :class="{'hide':item.name==='电脑设备'}">
+        <el-menu-item :index="'/'+item.path" v-for="(item,index) in item.children" :key="index">
           <i class="el-icon-menu"></i>
-          <span>{{item.name==='搞笑类'?'动画类':item.name}}</span>
+          <span v-if="item.name==='故障设备'&&status===0">我的保修</span>
+          <span v-else>{{item.name==='搞笑类'?'动画类':item.name }}</span>
         </el-menu-item>
       </el-submenu>
     </el-menu>
@@ -92,7 +93,7 @@ export default {
           if (this.minute >= 10000) {
             return item.title === "收费管理";
           }
-          return item.status === this.status || item.title === "报表管理";
+          return item.status === this.status
         });
       } else {
         this.navlist = this.navs;
