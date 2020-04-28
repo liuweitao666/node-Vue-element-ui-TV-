@@ -19,7 +19,7 @@
         <h4 v-if="path==='pmovie'">电影</h4>
         <h4 v-else-if="path==='ptvseries'">电视剧</h4>
         <h4 v-else-if="path==='pvariety'">综艺</h4>
-        <h4 v-else>搞笑视频</h4>
+        <h4 v-else>动漫</h4>
       </el-col>
 
       <!-- 排序方式 -->

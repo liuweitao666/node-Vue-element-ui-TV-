@@ -1,5 +1,7 @@
 <template>
   <div>
+    <!-- 成功提示 -->
+    <prompt :prompt="prompt" :msg="'提示'" @isprompt="changeprompt" :content="'上报成功！'"/>
     <!-- 面包屑导航 -->
     <el-breadcrumb separator-class="el-icon-arrow-right">
       <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
@@ -7,9 +9,9 @@
       <el-breadcrumb-item>设备报修</el-breadcrumb-item>
     </el-breadcrumb>
     <!-- 主题部分 -->
-    <el-card>
+    <el-card >
       <div class="container">
-        <img src="@/assets/image/repair.png" alt />
+        <!-- <img src="@/assets/image/repair.png" alt /> -->
         <div class="card-right" v-if="userinfo">
           <el-form
             ref="repair"
@@ -18,13 +20,10 @@
             size="small"
             label-position="top"
           >
-            <el-form-item label="用户名">
-              <el-input class="input-w" :value="userinfo.username" disabled></el-input>
-            </el-form-item>
             <!-- 选择品牌 -->
             <el-form-item label="品牌" prop="label">
               <div class="label">
-                <el-dropdown @command="selectlogo" trigger="click">
+                <!-- <el-dropdown @command="selectlogo" trigger="click">
                   <el-input
                     class="input-down"
                     size="mini"
@@ -42,7 +41,8 @@
                       {{item.name}}
                     </el-dropdown-item>
                   </el-dropdown-menu>
-                </el-dropdown>
+                </el-dropdown>-->
+                <tvlogo :model="repairinfo.label" @selectlabel="Slabel" />
                 <span>* 目前仅提供7种品牌，请谅解！</span>
               </div>
             </el-form-item>
@@ -91,6 +91,8 @@
 </template>
 <script>
 import { mapState } from "vuex"
+import tvlogo from "./comon/tvLogo"
+import prompt from "@/components/common/prompt"
 export default {
   data() {
     return {
@@ -119,17 +121,13 @@ export default {
           { min: 11, message: "长度不能少于11位" }
         ]
       },
-      // 电视品牌数据
-      TVlogo: [
-        { name: "华为", url: require("@/assets/image/logo/华为.png") },
-        { name: "康佳", url: require("@/assets/image/logo/康佳.png") },
-        { name: "乐视", url: require("@/assets/image/logo/乐视.png") },
-        { name: "三星", url: require("@/assets/image/logo/三星.png") },
-        { name: "索尼", url: require("@/assets/image/logo/索尼.png") },
-        { name: "小米", url: require("@/assets/image/logo/小米.png") },
-        { name: "TCL", url: require("@/assets/image/logo/TCL.png") }
-      ]
+      // 控制更新成功提示的显示
+      prompt:false
     }
+  },
+  components: {
+    tvlogo,
+    prompt
   },
   created() {},
   methods: {
@@ -141,21 +139,38 @@ export default {
     upload() {
       this.$refs.repair.validate(async valid => {
         if (valid) {
+          const dt = Date.now()
+          this.repairinfo.datetime = this.format(dt)
           this.repairinfo.username = this.userinfo.username
           const { data: res } = await this.$http.post(
             "/home/device",
             this.repairinfo
           )
           if (res.code !== 1) return this.$message.error(res.msg)
-          this.$message.success(res.msg)
+          this.prompt = true
         } else {
           this.$message.error("请输入正确的信息！！")
           return false
         }
       })
     },
-    selectlogo(name) {
+    // 选中品牌
+    Slabel(name) {
       this.repairinfo.label = name
+    },
+    // 过滤时间方法
+    format(origantime) {
+      const dt = new Date(origantime)
+
+      const y = dt.getFullYear()
+      const m = (dt.getMonth() + 1 + "").padStart(2, "0")
+      const d = (dt.getDate() + "").padStart(2, "0")
+
+      return `${y}-${m}-${d}`
+    },
+    // 控制提示框显示事件
+    changeprompt(value){
+      this.prompt = value
     }
   },
   computed: {
@@ -165,11 +180,15 @@ export default {
 </script>
 <style lang="scss" scoped>
 .el-card {
-  background: #f7f8fc;
+  // background: #f7f8fc;
   .container {
+    background-image:url(//pic3-nc.pocoimg.cn/image/poco/works/94/2020/0424/10/15876940692104418_201353836_H1920.jpg);
+    background-size: 1012px 680px;
+    // background-position: 90%;
+    height: 675px;
     display: flex;
     margin: auto;
-    justify-content: center;
+    justify-content: flex-end;
     align-items: center;
     img {
       width: 420px;
@@ -180,8 +199,8 @@ export default {
       background: #ffffff;
       border-radius: 5px;
       padding: 20px;
-      margin-right: 40px;
-      box-shadow: 0 2px 12px 0 rgba(255, 255, 255, 0.2);
+      margin-right: 50px;
+      box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.5);
       .input-w {
         width: 350px;
       }
@@ -199,9 +218,7 @@ export default {
     }
   }
 }
-.el-dropdown {
-  width: 100px;
-}
+
 // 品牌样式
 .label {
   display: flex;
@@ -212,13 +229,12 @@ export default {
     font-size: 12px;
   }
 }
+.el-dropdown {
+  width: 100px;
+}
 .tv-logo {
   width: 18px;
   height: 18px;
   margin-right: 8px;
-}
-.el-dropdown-menu__item {
-  display: flex;
-  align-items: center;
 }
 </style>

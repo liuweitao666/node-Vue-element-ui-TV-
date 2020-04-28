@@ -5,7 +5,7 @@
       <div class="patment" v-if="isrecord">
         <div class="payment-title">
           <span>交易记录</span>
-          <i class="el-icon-close icon" @click="closerecord" ></i>
+          <i class="el-icon-close icon" @click="closerecord"></i>
         </div>
         <div v-if="toll.length>0">
           <div class="payment-content" v-for="item in toll" :key="item.id">
@@ -28,7 +28,7 @@
     <el-row :gutter="20">
       <!-- 费用详情 -->
       <el-col :span="10">
-        <el-card>
+        <el-card v-if="userinfo">
           <h4>费用详情</h4>
           <div class="expense-pro">
             <div class="avatar">
@@ -40,7 +40,7 @@
             <div class="progress">
               <el-progress type="dashboard" :percentage="price" :color="colors"></el-progress>
               <div>
-                <span>欠费百分比</span>
+                <span>欠费情况</span>
               </div>
             </div>
           </div>
@@ -54,7 +54,7 @@
             <span>您当月已欠费：{{price}}元(RMB)</span>
             <span class="pad">
               上限：
-              <span style="color:#f56c6c">1000</span>元
+              <span style="color:#f56c6c">100</span>元
             </span>
           </div>
           <div class="expense">
@@ -96,9 +96,9 @@
   </div>
 </template>
 <script>
-import { mapState } from "vuex";
-import { finddata } from "@/common/crod/index";
-import prompt from "../../common/prompt";
+import { mapState } from "vuex"
+import { finddata } from "@/common/crod/index"
+import prompt from "../../common/prompt"
 export default {
   data() {
     return {
@@ -117,31 +117,34 @@ export default {
       prompts: false,
       isrecord: false,
       toll: null
-    };
+    }
   },
   components: {
     prompt
   },
   created() {
     // 获取当前用户名，
-    this.username = sessionStorage.getItem("username");
-    this.gettoll();
+    this.username = sessionStorage.getItem("username")
+    this.gettoll()
   },
   methods: {
     // 获取当前用户消息
     async gettoll() {
       const { data: res } = await finddata("/home/users", {
         username: this.username
-      });
-      this.programs = res[0].program.reverse();
-      this.price = (res[0].minute/100).toFixed(2);
+      })
+      this.programs = res[0].program.reverse()
+      this.price = (res[0].minute / 100).toFixed(2)
       this.price = parseFloat(this.price)
-      this.avatar = res[0].avatar;
-      this.toll = res[0].toll.reverse();
+      this.avatar = res[0].avatar
+      res[0].toll.forEach(item => {
+        item.price = item.price/100
+      });
+      this.toll = res[0].toll.reverse()
     },
     // 控制弹窗是否出现
     hidepay() {
-      this.prompts = true;
+      this.prompts = true
     },
     // 支付请求
     async payment(price) {
@@ -149,31 +152,29 @@ export default {
         const { data: res } = await this.$http.put("/home/pay", {
           price,
           username: this.userinfo.username
-        });
+        })
         if (res.code !== 1) {
-          return this.$message.error(res.msg);
+          return this.$message.error(res.msg)
         }
-        this.$message.success(res.msg);
-        this.gettoll();
-        return (this.prompts = false);
+        this.$message.success(res.msg)
+        this.gettoll()
+        return (this.prompts = false)
       }
-     
-        this.prompts = false;
-    
+      this.prompts = false
     },
     // 显示支付记录
     record() {
-      this.isrecord = true;
+      this.isrecord = true
     },
     closerecord() {
-      this.isrecord = false;
+      this.isrecord = false
     }
   },
   // eslint-disable-next-line no-dupe-keys
   computed: {
     ...mapState(["userinfo", "status"])
   }
-};
+}
 </script>
 <style scoped>
 /* 费用详情 */
@@ -294,7 +295,7 @@ export default {
 .record-leave-active {
   transition: all 0.5s ease;
 }
-.icon{
+.icon {
   cursor: pointer;
 }
 </style>

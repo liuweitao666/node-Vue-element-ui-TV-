@@ -4,7 +4,7 @@
     <el-breadcrumb separator-class="el-icon-arrow-right">
       <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
       <el-breadcrumb-item>节目管理</el-breadcrumb-item>
-      <el-breadcrumb-item>搞笑类</el-breadcrumb-item>
+      <el-breadcrumb-item>动漫类</el-breadcrumb-item>
     </el-breadcrumb>
     <!-- 主题部分 -->
     <el-card>

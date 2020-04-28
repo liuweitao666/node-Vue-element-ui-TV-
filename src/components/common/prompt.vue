@@ -1,6 +1,7 @@
 <template>
   <div>
-    <div class="local" v-if="prompt">
+    <div class="local"  v-if="prompt">
+      <div class="entire" @click.stop="handlehide"></div>
       <div class="success">
         <div class="prompt">
           <span>{{msg}}</span>
@@ -17,9 +18,9 @@
               <label class="label">缴费金额:</label>
               <el-input v-model="payment" class="price" size="small"></el-input>
             </div>
-            <span v-else>更新资料成功！</span>
+            <span v-else>{{content}}</span>
           </div>
-          <el-button type="primary" size="middle" @click="closeprompt" v-if="!status">确定</el-button>
+          <el-button type="primary" size="middle" @click="closeprompt" >确定</el-button>
         </div>
       </div>
     </div>
@@ -45,6 +46,10 @@ export default {
     price: {
       type: Number,
       defaults: 0
+    },
+    content:{
+      type:String,
+      default:''
     }
   },
   created() {
@@ -54,10 +59,15 @@ export default {
     //   关闭选框
     closeprompt() {
       this.$emit("isprompt", this.payment);
+      this.payment = 0
     },
     // 关闭
     close() {
       this.$emit("isprompt");
+    },
+    // 点击显示区域外关闭
+    handlehide(){
+      this.$emit("isprompt")
     }
   },
   computed: {
@@ -65,7 +75,7 @@ export default {
   }
 };
 </script>
-<style scoped>
+<style lang="scss" scoped>
 .local {
   position: fixed;
   width: 100%;
@@ -76,6 +86,10 @@ export default {
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
   z-index: 1000;
+  .entire{
+    width: 100%;
+    height: 100%;
+  }
 }
 .success {
   width: 400px;

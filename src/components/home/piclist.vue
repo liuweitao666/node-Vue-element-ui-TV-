@@ -84,7 +84,6 @@ export default {
     },
     // 跳转到播放页面
     goplay(id, title) {
-      console.log(id, title)
       this.$router.push({ path: "/detail", query: { id, title } })
     }
   }

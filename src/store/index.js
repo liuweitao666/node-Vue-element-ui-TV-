@@ -60,8 +60,8 @@ const store = new Vuex.Store({
             })
         },
         // 修改用户状态
-        asyncstatus({ commit }, status) {
-            commit('editstatus', status)
+        async asyncstatus({ commit }, status) {
+            await commit('editstatus', status)
         },
         // 
         asyncuserinfo({ commit }, userinfo) {

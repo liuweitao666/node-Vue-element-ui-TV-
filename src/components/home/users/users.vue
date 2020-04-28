@@ -7,6 +7,7 @@
       <el-breadcrumb-item>用户管理</el-breadcrumb-item>
     </el-breadcrumb>
     <el-card>
+      <!-- 筛选部分 -->
       <div class="sort-user">
         <div :class="{'Dactive':sortuser}" @click="sortUser(true,'entire')">
           <span>全部用户</span>
@@ -80,6 +81,7 @@
           class="demo-ruleForm"
           v-if="updateuser"
         >
+        <!-- 权限管理 -->
           <div v-if="upstatus">
             <el-form-item label="用户名" prop="username">
               <el-input v-model="updateuser.username" class="editinp-dis" disabled></el-input>
@@ -96,6 +98,7 @@
               </el-select>
             </el-form-item>
           </div>
+        <!-- 编辑用户信息 -->
           <div v-else>
             <el-form-item label="id" v-show="!updateuser._id">
               <el-input v-model="updateuser._id" class="editinp"></el-input>
@@ -210,6 +213,7 @@ export default {
       if (res.code == 1) {
         this.usersdata = res.data
         this.total = res.total
+        console.log(res,this.total)
       }
     },
     // 向home页面发送请求路径
@@ -281,6 +285,7 @@ export default {
     },
     // 切换查看普通用户
     sortUser(flag,type){
+      this.queryinfo.query.username = ''
       this.queryinfo.type = type
       this.sortuser = flag;
       this.getusers()

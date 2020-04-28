@@ -145,7 +145,6 @@ import { request } from "@/network/request"
 export default {
   data() {
     return {
-      isinput:true,
       username: "",
       // 导航栏数据
       navs: null,
@@ -159,6 +158,8 @@ export default {
       userinfo: null,
       history: false,
       hisvalue: null,
+      // 验证是否可以搜索的正则
+      reg: /^[p|i].*$/,
       // 控制刚开始登录弹窗只出现一次
       flag: false,
       imgw: [
@@ -178,24 +179,27 @@ export default {
     navigation
   },
   beforeCreate() {},
-  created() {
+   created() {
     this.username = sessionStorage.getItem("username")
+    
     // 调用获取导航数据方法
     this.getNav()
     // 获取当天天气预报
     this.getweather()
     // 登录提示
     // this.userprompt();
-    // 获取当前用户数据
-    this.getuserinfo()
+    
     // 当前用户权限
   },
   mounted() {
     document.addEventListener("click", e => {
-      if (e.target.className === "head-icon"||e.target.className === "prompt-dis") {
+      if (
+        e.target.className === "head-icon" ||
+        e.target.className === "prompt-dis"
+      ) {
         this.promptVisible = true
-      }else{
-        this.promptVisible =false
+      } else {
+        this.promptVisible = false
       }
     })
     //如果有报错可以写
@@ -217,6 +221,8 @@ export default {
       if (res.code !== 1) return console.log("获取数据失败")
       this.navs = res.data
       // console.log(this.navs);
+      // 获取当前用户数据
+     this.getuserinfo()
     },
     // 退出登录
     handleCommand(command) {
@@ -277,7 +283,7 @@ export default {
       // console.log(res)
       if (res.length !== 0) {
         this.userinfo = res[0]
-        this.hisvalue = res[0].history.reverse()
+        this.hisvalue = res[0].history.reverse().splice(0, 10)
         // 把当前用户的信息用vuex保存起来
         await this.$store.dispatch("asyncstatus", this.userinfo.status)
         await this.$store.dispatch("asyncuserinfo", res[0])
@@ -310,17 +316,15 @@ export default {
     },
     // 显示历史搜索框
     Shistory() {
-      
-      this.isinput =false
+      this.isinput = false
       this.history = true
     },
     // 添加历史记录
-    async Addhistory() {
-      const { data: res } = await this.$http.put("/home/shistory", {
+    Addhistory() {
+      this.$http.put("/home/shistory", {
         username: this.username,
         value: this.searchval
       })
-      console.log(res)
     },
     // 点击搜索记录搜索
     handleseach(value) {
@@ -375,17 +379,13 @@ export default {
         this.pathtitle === "pfunny"
       )
     },
-    ...mapState(["status"])
-  },
-  watch:{
-    pathtitle(newval){
-      const reg = /^[p|i].*$/
-      if (!reg.test(newval)) {
-        return this.isinput = true
-      }else{
-        return this.isinput = false
-      }
+    ...mapState(["status"]),
+    isinput(){
+      return !this.reg.test(this.pathtitle)
     }
+  },
+  watch: {
+
   }
 }
 </script>
@@ -535,8 +535,8 @@ export default {
   position: fixed;
   z-index: 99;
 }
-.el-icon-close:hover{
-  color:#00a1d6;
+.el-icon-close:hover {
+  color: #00a1d6;
 }
 .bestup {
   position: relative;

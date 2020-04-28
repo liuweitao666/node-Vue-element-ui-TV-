@@ -39,6 +39,11 @@
       <h4>最新节目</h4>
       <!-- 首页轮播图组件 -->
       <piclist :piclist="picimg" />
+      <!-- 分类组件 -->
+      <modlist :data="animation" :title="'动漫'" />
+      <modlist :data="movie" :title="'电影'" />
+      <modlist :data="tvseries" :title="'电视剧'" />
+      <modlist :data="variety" :title="'综艺'" />
     </el-card>
     <el-dialog :title="status?'留言内容':'留言板'" :visible.sync="comment" width="50%">
       <div class v-if="status">
@@ -84,9 +89,11 @@
 <script>
 import piclist from "./piclist"
 import { mapState, mapActions } from "vuex"
+import modlist from "./wlecome/modlist"
 export default {
   components: {
-    piclist
+    piclist,
+    modlist
   },
   data() {
     return {
@@ -106,7 +113,12 @@ export default {
       },
       commentlist: null,
       allprogram: [],
-      Videos: null
+      Videos: null,
+      // 分类数据
+      movie: null,
+      tvseries: null,
+      variety: null,
+      animation: null
     }
   },
   created() {
@@ -148,37 +160,43 @@ export default {
       // 今日更新数
 
       // 添加首页的数据
+      res.data[0].data.forEach(item => {
+        item.path = res.data[0].title
+      })
       let movie = res.data[0].data
         .sort((a, b) => {
           return parseInt(a.updatetime) - parseInt(b.updatetime)
         })
         .slice(0, 3)
-      movie.forEach(item => {
-        item.path = res.data[0].title
+
+      res.data[1].data.forEach(item => {
+        item.path = res.data[1].title
       })
       let tv = res.data[1].data
         .sort((a, b) => {
           return parseInt(a.updatetime) - parseInt(b.updatetime)
         })
         .slice(0, 2)
-      tv.forEach(item => {
-        item.path = res.data[1].title
+
+      res.data[2].data.forEach(item => {
+        item.path = res.data[2].title
       })
       let zy = res.data[2].data.reverse().slice(0, 2)
-      zy.forEach(item => {
-        item.path = res.data[2].title
+
+      res.data[3].data.forEach(item => {
+        item.path = res.data[3].title
       })
       let dh = res.data[3].data
         .sort((a, b) => {
           return parseInt(a.updatetime) - parseInt(b.updatetime)
         })
         .slice(0, 4)
-      dh.forEach(item => {
-        item.path = res.data[3].title
-      })
       // 把节目数据加入到数组picimg
       this.picimg.push(...movie, ...tv, ...zy, ...dh)
-
+      this.movie = res.data[0].data
+      this.tvseries = res.data[1].data
+      this.variety = res.data[2].data
+      this.animation = res.data[3].data
     },
     dateformat(origantime) {
       const dt = new Date(origantime)
@@ -190,7 +208,7 @@ export default {
     iscomment() {
       this.comment = true
     },
-
+    // 提交评论
     async submitcontent() {
       this.comments.username = this.username
       this.comments.content.trim()

@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- 成功提示框 -->
-    <prompt :prompt="prompt" :msg="'提示'" @isprompt="changeprompt" />
+    <prompt :prompt="prompt" :msg="'提示'" @isprompt="changeprompt" :content="'更新资料成功！'"/>
     <!-- 面包屑导航 -->
     <el-breadcrumb separator-class="el-icon-arrow-right">
       <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>

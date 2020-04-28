@@ -51,8 +51,8 @@ export default {
     // 计算数据
     computedata() {
       this.minute = parseInt(this.time / 60);
-      this.second = this.time - this.minute * 60;
-      this.expense = this.price/10;
+      this.second = (this.time - this.minute * 60).toFixed(2);
+      this.expense = (this.price/100).toFixed(2);
     },
     async getprograms() {
       const { data: res } = await finddata("/home/users", {

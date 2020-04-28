@@ -10,40 +10,45 @@
     <div class="device-main">
       <!-- 筛选区域 -->
       <div class="device-head">
-        <div>
-          <el-dropdown @command="selectlogo" trigger="click">
-            <el-input
-              class="input-down"
+        <!-- 筛选左边区域 -->
+        <div class="left">
+          <div>
+            <tvlogo :model="seachquery.label" @selectlabel="selectlogo" @changelabel="changelabel" />
+          </div>
+          <div class="date-picker">
+            <el-date-picker
+              v-model="seachquery.datetime"
+              type="date"
+              placeholder="选择日期时间"
+              align="right"
+              :picker-options="pickerOptions"
               size="mini"
-              placeholder="选择品牌"
-              suffix-icon="el-icon-arrow-down"
-              v-model="label"
+            ></el-date-picker>
+          </div>
+          <div>
+            <el-input
+              placeholder="设备名称"
+              size="mini"
+              class="head-input"
+              v-model="seachquery.devicename"
             ></el-input>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item v-for="(item,index) in TVlogo" :key="index" :command="item.name">
-                <img :src="item.url" alt class="tv-logo" />
-                {{item.name}}
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
+            <el-button type="primary" size="mini" round @click="seachval">搜索</el-button>
+            <el-button type="warning" size="mini" round @click="clearquery">重置</el-button>
+          </div>
         </div>
-        <div class="date-picker">
-          <el-date-picker
-            v-model="datetime"
-            type="datetime"
-            placeholder="选择日期时间"
-            align="right"
-            :picker-options="pickerOptions"
-            size="mini"
-          ></el-date-picker>
-        </div>
-        <div>
-          <el-input placeholder="设备名称" size="mini" class="head-input"></el-input>
-          <el-button type="primary" size="mini" round>搜索</el-button>
+        <!-- 筛选右部区域 -->
+        <div class="sort-device" v-if="status">
+          <div :class="{'Dactive':sortdevice}" @click="sortDevice(true,'entire')">
+            <span>全部设备</span>
+          </div>
+          <div :class="{'Dactive':!sortdevice}" @click="sortDevice(false,'common')">
+            <span>未处理</span>
+          </div>
+          <div :class="['warp-user',{'warp-active':!sortdevice}]"></div>
         </div>
       </div>
       <!-- 表格区域 -->
-      <div class="device-table" v-if="Dlist">
+      <div class="device-table" v-if="Dlist && JSON.stringify(Dlist)!=='[]'">
         <table>
           <thead>
             <tr>
@@ -73,14 +78,14 @@
               <td>{{status?item.address:(item.status?item.Aphone:'请等待受理人接单')}}</td>
               <td class="caozuo">
                 <span @click="operate('edit',item._id)">修改</span>
-                <span class="see">查看</span>
+                <span class="see" @click="operate('',item._id,item.username)">查看</span>
                 <span @click="operate('delete',item._id)">删除</span>
               </td>
             </tr>
           </tbody>
         </table>
-        <!-- 修改对话框 -->
-        <el-dialog :title="title"></el-dialog>
+        <!-- 详情对话框 -->
+        <card :prompt="dialogdetail" @isprompt="closedialog" :content="editform" />
         <!-- 分页区域 -->
         <div class="pagenum">
           <el-pagination
@@ -94,13 +99,18 @@
           ></el-pagination>
         </div>
       </div>
+      <el-card v-else>
+        <div class="seen" >{{'暂无设备记录'}}</div>
+      </el-card>
+
       <!-- 修改对话框 -->
-      <el-dialog title="详情内容" :visible.sync="dialogVisible" width="32%" v-if="editform">
+      <el-dialog title="编辑内容" :visible.sync="dialogVisible" width="32%" v-if="editform">
         <el-form
           size="small"
           label-position="right"
           label-width="100px"
           :model="editform"
+          ref="editform"
           :rules="rulerepair"
           class="editform"
         >
@@ -108,7 +118,17 @@
             <el-input v-model="editform.username" disabled></el-input>
           </el-form-item>
           <el-form-item label="品牌">
-            <el-input v-model="editform.label" :disabled="status"></el-input>
+            <el-input
+              class="input-down"
+              size="mini"
+              placeholder="选择品牌"
+              suffix-icon="el-icon-arrow-down"
+              v-model="editform.label"
+              :disabled="status?true:false"
+              v-if="status"
+              style="width:100px"
+            ></el-input>
+            <tvlogo v-else :model="editform.label" @selectlabel="Slogo" />
           </el-form-item>
           <!-- 管理员可见 -->
           <el-form-item label="状态" prop="status" v-if="status">
@@ -195,19 +215,27 @@
 <script>
 import { mapState } from "vuex"
 import { deleted } from "@/common/crod/index"
+import tvlogo from "./comon/tvLogo"
+import card from "@/components/common/card"
 export default {
   data() {
     return {
       // 请求体
       queryinfo: {
+        query: null,
         pagenum: 1,
-        pagesize: 5
+        pagesize: 10
       },
-      datetime: "",
+      // 控制顶部未处理动画
+      sortdevice: true,
       total: 0,
       Dlist: null,
-      title: "状态变动",
+      // 详情对话框
+      dialogdetail: false,
       pickerOptions: {
+        disabledDate(time) {
+          return time.getTime() > Date.now()
+        },
         shortcuts: [
           {
             text: "今天",
@@ -233,7 +261,12 @@ export default {
           }
         ]
       },
-      label: "",
+      // 搜索请求体
+      seachquery: {
+        label: "",
+        datetime: "",
+        devicename: ""
+      },
       // 电视品牌数据
       TVlogo: [
         { name: "华为", url: require("@/assets/image/logo/华为.png") },
@@ -263,30 +296,34 @@ export default {
         adminname: [{ required: true, message: "不能为空", trigger: "blur" }],
         Aphone: [
           { required: true, message: "不能为空", trigger: "blur" },
-          { min: 11,max:11, message: "长度为11位" }
+          { min: 11, max: 11, message: "长度为11位" }
         ],
         status: [{ required: true, message: "不能为空", trigger: "blur" }]
       }
     }
   },
-  async created() {
+  components: {
+    tvlogo,
+    card
+  },
+  created() {
     // await this.getstatus()
     // 调用获取设备保修方法
-    setTimeout(() => {
-      this.getdevice()
-    }, 200)
+    this.getdevice()
   },
   methods: {
     // 获取设备保修数据方法
     async getdevice() {
       let data
       // 获取用户状态
-      let status = this.status
-      if (!status) {
-        // console.log(status)
-
+      const username = window.sessionStorage.getItem('username')
+      const {data:info} = await this.$http.get('/home/users',{params:{
+        username
+      }})
+      const Uinfo = info.data[0]
+      if (!Uinfo.status) {
         // 获取当前用户名
-        this.queryinfo.username = window.sessionStorage.getItem("username")
+        this.queryinfo.username = Uinfo.username
         data = await this.$http.get("/home/device", {
           params: this.queryinfo
         })
@@ -312,34 +349,53 @@ export default {
       this.queryinfo.pagenum = val
       this.getdevice()
     },
+    // 根据_id获取对应的信息
+    async getdevicebyid(data) {
+      const { data: res } = await this.$http.get("/home/device", {
+        params: data
+      })
+      this.editform = res.data
+    },
     // 操作的方法
-    async operate(type, id) {
+    async operate(type, id, username) {
       // 删除数据逻辑
       if (type === "delete") {
         const code = await deleted("/home/device", { _id: id })
         if (code === 1) {
-          this.getdevice()
+          return this.getdevice()
         }
       } else if (type === "edit") {
-        console.log("edit", id)
-        const { data: res } = await this.$http.get("/home/device", {
-          params: { _id: id }
-        })
-        this.editform = res.data
-        this.dialogVisible = true
+        // console.log("edit", id)
+        this.getdevicebyid({ _id: id })
+        return (this.dialogVisible = true)
       }
+      await this.getdevicebyid({ _id: id, username })
+      this.dialogdetail = true
     },
     // 选择品牌名称
     selectlogo(name) {
-      this.label = name
+      this.seachquery.label = name
+    },
+    Slogo(name) {
+      this.editform.label = name
     },
     // 发送修改请求
-    async Editdevice() {
-      const { data: res } = await this.$http.put("/home/device", this.editform)
-      if (res.code !== 1) return this.$message.error(res.msg)
-      this.$message.success(res.msg)
-      this.getdevice()
-      this.dialogVisible = false
+    Editdevice() {
+      this.$refs.editform.validate(async valid => {
+        if (valid) {
+          const { data: res } = await this.$http.put(
+            "/home/device",
+            this.editform
+          )
+          if (res.code !== 1) return this.$message.error(res.msg)
+          this.$message.success(res.msg)
+          this.getdevice()
+          this.dialogVisible = false
+        } else {
+          this.$message.error("请输入正确的信息！！")
+          return false
+        }
+      })
     },
     // 选择状态
     selectstatus(command) {
@@ -348,10 +404,76 @@ export default {
     // 选择受理人
     selectman(command) {
       this.editform.adminname = command
+    },
+    // 搜索设备
+    async seachval() {
+      if (!this.status) {
+        this.seachquery.username = this.userinfo.username
+      }
+      this.seachquery.datetime = this.seachquery.datetime
+        ? this.format(this.seachquery.datetime)
+        : ""
+      this.queryinfo.query = this.seachquery
+      this.getdevice()
+    },
+    clearquery() {
+      this.seachquery.datetime = ""
+      this.seachquery.label = ""
+      this.seachquery.devicename = ""
+      this.getdevice()
+    },
+    // 顶部选择未处理数据
+    sortDevice(val, type) {
+      this.sortdevice = val
+      if (type === "entire") {
+        this.queryinfo.query = null
+        for (let i in this.seachquery) {
+          this.seachquery[i] = ""
+        }
+        this.getdevice()
+      } else {
+        this.queryinfo.query = 0
+        for (let i in this.seachquery) {
+          this.seachquery[i] = ""
+        }
+        this.getdevice()
+      }
+    },
+    // 过滤时间方法
+    format(origantime) {
+      const dt = new Date(origantime)
+
+      const y = dt.getFullYear()
+      const m = (dt.getMonth() + 1 + "").padStart(2, "0")
+      const d = (dt.getDate() + "").padStart(2, "0")
+
+      return `${y}-${m}-${d}`
+    },
+    // 关闭上次情况
+    closedialog() {
+      this.dialogdetail = false
+    },
+    // 改变品牌的值
+    changelabel(value) {
+      this.seachquery.label = value
     }
   },
   computed: {
-    ...mapState(["status"])
+    ...mapState(["status"]),
+    alldata() {
+      return (
+        this.seachquery.label === "" &&
+        this.seachquery.datetime === "" &&
+        this.seachquery.devicename === ""
+      )
+    }
+  },
+  watch: {
+    dialogVisible(newval) {
+      if (!newval) {
+        this.$refs.editform.resetFields()
+      }
+    }
   }
 }
 </script>
@@ -367,6 +489,11 @@ table tr {
 .device-head {
   display: flex;
   margin-bottom: 15px;
+  justify-content: space-between;
+  align-items: center;
+  .left {
+    display: flex;
+  }
   .head-input {
     width: 320px;
     margin-right: 10px;
@@ -447,6 +574,13 @@ table tr {
     }
   }
 }
+.seen {
+  height: 100px;
+  text-align: center;
+  color: #999;
+  line-height: 100px;
+  font-size: 20px;
+}
 .tv-logo {
   width: 18px;
   height: 18px;
@@ -459,5 +593,41 @@ table tr {
 .editform .el-input {
   width: 345px;
 }
-// 表格分离标题
+/* 顶部筛选 */
+.sort-device {
+  width: 250px;
+  height: 28px;
+  line-height: 28px;
+  border-radius: 30px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  display: flex;
+  background: #ffffff;
+  justify-content: space-between;
+  position: relative;
+  div {
+    font-size: 13px;
+    color: #00a1d6;
+    width: 50%;
+    text-align: center;
+    cursor: pointer;
+    transition: color 0.5s ease;
+  }
+  .Dactive {
+    color: #ffffff;
+    position: relative;
+    z-index: 99;
+  }
+  .warp-user {
+    position: absolute;
+    transition: all 0.5s ease;
+    background: #00a1d6;
+    width: 50%;
+    height: 28px;
+    border-radius: 30px;
+    right: 50%;
+  }
+  .warp-active {
+    right: 0;
+  }
+}
 </style>
