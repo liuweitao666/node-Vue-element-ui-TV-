@@ -5,6 +5,7 @@ import router from './router'
 import './common/element-ui'
 import md5 from 'js-md5'
 import store from './store/index'
+import './mock/index'
 
 // 进度条插件
 import NProgress from 'nprogress'

@@ -9,7 +9,6 @@
         v-model="data"
       ></el-input>
       <div class="clear" @click.stop="clearmodel" v-if="data">
-
       </div>
       <el-dropdown-menu slot="dropdown">
         <el-dropdown-item v-for="(item,index) in TVlogo" :key="index" :command="item.name">

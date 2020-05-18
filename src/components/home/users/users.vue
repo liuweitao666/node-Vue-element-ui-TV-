@@ -47,27 +47,33 @@
         </el-table-column>
         <el-table-column label="操作">
           <template slot-scope="scope">
-            <el-button
-              type="primary"
-              icon="el-icon-edit"
-              circle
-              size="small"
-              @click="edituser(scope.row._id)"
-            ></el-button>
-            <el-button
-              type="danger"
-              icon="el-icon-delete"
-              circle
-              size="small"
-              @click="removeuser(scope.row._id)"
-            ></el-button>
-            <el-button
-              type="warning"
-              icon="el-icon-setting"
-              circle
-              size="small"
-              @click="editstatus(scope.row._id)"
-            ></el-button>
+            <el-tooltip content="编辑" placement="top"  :enterable="false">
+              <el-button
+                type="primary"
+                icon="el-icon-edit"
+                circle
+                size="small"
+                @click="edituser(scope.row._id)"
+              ></el-button>
+            </el-tooltip>
+            <el-tooltip content="删除" placement="top"  :enterable="false">
+              <el-button
+                type="danger"
+                icon="el-icon-delete"
+                circle
+                size="small"
+                @click="removeuser(scope.row._id)"
+              ></el-button>
+            </el-tooltip>
+            <el-tooltip content="分配权限" placement="top"  :enterable="false">
+              <el-button
+                type="warning"
+                icon="el-icon-setting"
+                circle
+                size="small"
+                @click="editstatus(scope.row._id)"
+              ></el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>
@@ -79,9 +85,10 @@
           ref="ruleFormedit"
           label-width="100px"
           class="demo-ruleForm"
+          size="small"
           v-if="updateuser"
         >
-        <!-- 权限管理 -->
+          <!-- 权限管理 -->
           <div v-if="upstatus">
             <el-form-item label="用户名" prop="username">
               <el-input v-model="updateuser.username" class="editinp-dis" disabled></el-input>
@@ -98,7 +105,7 @@
               </el-select>
             </el-form-item>
           </div>
-        <!-- 编辑用户信息 -->
+          <!-- 编辑用户信息 -->
           <div v-else>
             <el-form-item label="id" v-show="!updateuser._id">
               <el-input v-model="updateuser._id" class="editinp"></el-input>
@@ -112,10 +119,22 @@
             <el-form-item label="手机">
               <el-input v-model="updateuser.phone" class="editinp"></el-input>
             </el-form-item>
-            <el-form-item label="gender">
-              <el-input v-model="updateuser.gender" class="editinp"></el-input>
+            <el-form-item label="欠费金额">
+              <el-input v-model="updateuser.minute" class="editinp"></el-input>
             </el-form-item>
-            <el-form-item label="region">
+            <el-form-item label="性别">
+              <el-dropdown @command="selectsex" trigger="click">
+                <el-input v-model="gender" class="dropinput" suffix-icon="el-icon-arrow-down"></el-input>
+                <el-dropdown-menu slot="dropdown">
+                  <el-dropdown-item
+                    v-for="(item,index) in Sex"
+                    :key="index"
+                    :command="item.id"
+                  >{{item.name}}</el-dropdown-item>
+                </el-dropdown-menu>
+              </el-dropdown>
+            </el-form-item>
+            <el-form-item label="地区">
               <el-input v-model="updateuser.region" class="editinp"></el-input>
             </el-form-item>
           </div>
@@ -156,7 +175,7 @@ export default {
         query: { username: "" },
         limit: 5,
         pagenum: 1,
-        type:'entire'
+        type: "entire"
       },
       // 全部数据条数
       total: null,
@@ -192,6 +211,11 @@ export default {
           value: "2",
           label: "禁止登录"
         }
+      ],
+      Sex: [
+        { id: -1, name: "保密" },
+        { id: 0, name: "女" },
+        { id: 1, name: "男" }
       ]
     }
   },
@@ -211,9 +235,12 @@ export default {
           type: "error"
         })
       if (res.code == 1) {
+        res.data.forEach(item => {
+          item.minute = parseInt(item.minute)
+        })
         this.usersdata = res.data
         this.total = res.total
-        console.log(res,this.total)
+        console.log(res, this.total)
       }
     },
     // 向home页面发送请求路径
@@ -234,7 +261,7 @@ export default {
           duration: 1500,
           type: "error"
         })
-
+        res[0].minute = parseInt(res[0].minute)
       this.updateuser = res[0]
       this.upstatus = ""
       // console.log(this.upstatus);
@@ -284,12 +311,25 @@ export default {
       this.upstatus = "status"
     },
     // 切换查看普通用户
-    sortUser(flag,type){
-      this.queryinfo.query.username = ''
+    sortUser(flag, type) {
+      this.queryinfo.query.username = ""
       this.queryinfo.type = type
-      this.sortuser = flag;
+      this.sortuser = flag
       this.getusers()
       console.log(flag)
+    },
+    selectsex(name) {
+      this.updateuser.gender = name
+    }
+  },
+  computed: {
+    // 性别
+    gender() {
+      return this.updateuser.gender === 1
+        ? "男"
+        : this.updateuser.gender === 0
+        ? "女"
+        : "保密"
     }
   }
 }
@@ -306,6 +346,9 @@ body .el-table th.gutter {
 }
 .editinp {
   width: 90%;
+}
+.dropinput {
+  width: 100px;
 }
 .pagenum {
   margin-top: 10px;
@@ -337,7 +380,7 @@ body .el-table th.gutter {
     width: 50%;
     text-align: center;
     cursor: pointer;
-    transition: color 0.5s ease
+    transition: color 0.5s ease;
   }
   .Dactive {
     color: #ffffff;
@@ -351,9 +394,9 @@ body .el-table th.gutter {
     width: 50%;
     height: 30px;
     border-radius: 30px;
-    right:50%;
+    right: 50%;
   }
-  .warp-active{
+  .warp-active {
     right: 0;
   }
 }

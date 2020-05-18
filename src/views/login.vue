@@ -6,6 +6,7 @@
       <i class="el-icon-warning-outline"></i>
       {{msg}}
     </div>
+    <!-- 主要区域 -->
     <div class="login-from">
       <!-- logo部分 -->
       <div class="login-logo">
@@ -22,7 +23,7 @@
       <!-- 登录表单 -->
       <div class="from1" v-if="isLogin">
         <!-- 快速登录部分 -->
-        <div v-if="swifelog">
+        <div v-if="swifelog || resetpw">
           <form onsubmit="return false">
             <p>
               <input
@@ -62,7 +63,14 @@
             @click="maillogin"
             :class="['login-button',{'butactive':!(loginmailcode===1) ? '':true}]"
             :disabled="!(loginmailcode===1)"
+            v-if="swifelog"
           >登录</button>
+          <button
+            @click="Next"
+            :class="['login-button',{'butactive':!(loginmailcode===1) ? '':true}]"
+            :disabled="!(loginmailcode===1)"
+            v-else
+          >下一步</button>
         </div>
         <!-- 密码登录部分 -->
         <div v-else>
@@ -224,7 +232,6 @@
           type="button"
         >注册</button>
       </div>
-
       <!-- 底部第三方登录 -->
       <div class="login-icon">
         <img
@@ -271,6 +278,9 @@ export default {
         email: "",
         code: ""
       },
+      // 忘记密码
+      repass:false,
+      resetpw:false,
       // 邮箱验证码
       loginmailcode: null,
       // 登录用户名和密码
@@ -367,11 +377,13 @@ export default {
       } else if (res.error_code === 0) {
         this.showtoast(res.msg)
         this.scode = null
-        this.Usercode = null
+        this.Pwcode = null
+        // this.Usercode = null
       } else {
         this.showtoast(res.msg)
         this.scode = null
-        this.Pwcode = null
+        // this.Pwcode = null
+        this.Usercode = null
       }
     },
     // 密码登录
@@ -519,14 +531,21 @@ export default {
     // 快速登录
     swifelogin() {
       this.swifelog = true
+      this.scode = null
     },
     // 忘记密码
     resetps() {
+      this.resetpw = true
       console.log(123)
     },
     // 返回密码登录
     backlogin() {
       this.swifelog = false
+      this.resetpw = false
+    },
+    // 忘记密码下一步
+    async Next(){
+      this.repass = true
     }
   },
   computed: {

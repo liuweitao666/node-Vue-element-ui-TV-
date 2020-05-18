@@ -40,7 +40,7 @@
             @click="goplay(item._id,item.path)"
           >
             <div class="image">
-              <img src alt />
+              <img :src="'http://127.0.0.1:3000'+item.cover" alt />
             </div>
             <div class="list-title">
               <span class="title">{{item.title}}</span>
@@ -95,7 +95,7 @@
             @click="goplay(item._id,item.path)"
           >
             <div class="image">
-              <img src alt />
+              <img :src="'http://127.0.0.1:3000'+item.cover" alt />
             </div>
             <div class="list-title">
               <span class="title">{{item.title}}</span>
@@ -195,7 +195,7 @@ export default {
 <style lang="scss" scoped>
 img {
   width: 100%;
-  height: 100%;
+
   transition: all 0.3s ease;
 }
 .list-title {
@@ -233,13 +233,13 @@ img {
     padding-bottom: 15px;
     padding-top: 10px;
     .head-contain {
-        width: 200px;
+      width: 200px;
       .head-image {
         display: inline-block;
         vertical-align: bottom;
         width: 28px;
         height: 28px;
-        background: url(//www.iqiyipic.com/common/fix/site-v4/sprite-channelTitle-icons@2x-0422.png)
+        background: url(../../../assets/image/sprite-channelTitle-icons.png)
           no-repeat 50%;
         background-size: 400px 120px;
         margin-right: 10px;
@@ -283,11 +283,15 @@ img {
   }
   .content {
     display: flex;
+    justify-content: space-between;
     .content-left {
       cursor: pointer;
       width: 405px;
       height: 369px;
       background: #e5e5e5;
+      img {
+        height: 100%;
+      }
       .left-image {
         height: 310px;
         width: 100%;
@@ -349,10 +353,13 @@ img {
       }
     }
     .content-right {
-      flex: 1;
+      width: 845px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      img {
+        transform: translateY(-20%);
+      }
       .list-main {
         display: flex;
       }
@@ -363,6 +370,7 @@ img {
         border: 2px solid #ffffff;
         border-top: none;
         background: #e5e5e5;
+        transition: all 0.3s ease;
         cursor: pointer;
         .image {
           width: 100%;
@@ -376,6 +384,13 @@ img {
           font-size: 35px;
           color: #fff;
         }
+      }
+      .list:hover {
+        // transform: scale(1.05);
+        position: relative;
+        z-index: 99;
+        border:none;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.1);
       }
     }
   }

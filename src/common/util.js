@@ -105,7 +105,9 @@ export function regpassword(callback, password) {
 // 确认密码
 export function regcompassword(callback, pwd, compwd) {
     console.log(pwd, compwd)
-    if (pwd === '') {
+    if(!compwd){
+        return callback(4)
+    }else if (pwd === '') {
         return callback(4)
     } else if (pwd === compwd) {
         return callback(1)

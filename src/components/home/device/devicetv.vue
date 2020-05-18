@@ -33,7 +33,7 @@
               v-model="seachquery.devicename"
             ></el-input>
             <el-button type="primary" size="mini" round @click="seachval">搜索</el-button>
-            <el-button type="warning" size="mini" round @click="clearquery">重置</el-button>
+            <el-button type="warning" size="mini" round @click="clearquery" :disabled="alldata">重置</el-button>
           </div>
         </div>
         <!-- 筛选右部区域 -->

@@ -8,8 +8,7 @@
     </el-breadcrumb>
     <!-- 主题部分 -->
     <el-card>
-      <programList :programlist="programlist" v-if="programlist"/>
-     
+      <programList :programlist="programlist" @resetdata ="resetdata" :Type="Type" v-if="programlist"/>
     </el-card>
   </div>
 </template>
@@ -21,7 +20,25 @@ export default {
     return {
       // 保存电影数据
       programlist: null,
-      name: ""
+      name: "",
+      Type: [
+        { title: "全部类型" },
+        { title: "动作" },
+        { title: "搞笑" },
+        { title: "奇幻" },
+        { title: "爱情" },
+        { title: "古装" },
+        { title: "魔幻" },
+        { title: "家庭" },
+        { title: "科幻" },
+        { title: "战争" },
+        { title: "青春" },
+        { title: "恐怖" },
+        { title: "犯罪" },
+        { title: "悲剧" },
+        { title: "悬疑" },
+        { title: "枪战" },
+      ],
     }
   },
   components: {
@@ -38,9 +55,14 @@ export default {
         title: this.$route.path.slice(1),
         name: this.name
       })
+      console.log(res)
       if (res.code !== 1) return this.$message.error(res.msg)
       this.programlist = res.data
-      // console.log(res)
+    },
+    // 获取筛选数据
+    resetdata(data){
+      console.log(data)
+      this.programlist = data
     }
   }
 }

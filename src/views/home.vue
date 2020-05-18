@@ -1,5 +1,13 @@
 <template>
   <el-container>
+    <!-- 禁止登录提示框 -->
+    <prompt
+      :msg="'禁止登录'"
+      :prompt="Islogin"
+      v-if="userinfo"
+      :ban="'isTime'"
+      :content="'您已被禁止登录，请联系管理员，QQ：1352819275!'"
+    />
     <!-- 点击让搜索记录消失 -->
     <div class="hidehis" v-if="history" @click="hidehis"></div>
     <!-- 左侧导航栏区域 -->
@@ -118,6 +126,7 @@
                 </div>
                 <el-dropdown-menu slot="dropdown">
                   <el-dropdown-item icon="el-icon-edit" command="1">修改资料</el-dropdown-item>
+                  <el-dropdown-item icon="el-icon-lock" command="2">更改密码</el-dropdown-item>
                   <el-dropdown-item icon="el-icon-switch-button" command="0">退出登录</el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
@@ -131,7 +140,35 @@
       </el-main>
       <!-- 版权部分 -->
       <el-footer style="height: 60px;">
-        <span>版权所有@16网络刘维韬</span>
+        <div>
+          <span>版权所有@16网络刘维韬</span>
+        </div>
+        <div class="github">
+          <a
+            class="footer-link"
+            href="https://github.com/OnlyLoveJ"
+            data-hotkey="g d"
+            aria-label="Homepage "
+            data-ga-click="Header, go to dashboard, icon:logo"
+          >
+            <svg
+              class="octicon octicon-mark-github v-align-middle"
+              height="16"
+              viewBox="0 0 16 16"
+              version="1.1"
+              width="16"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+              />
+            </svg>
+          </a>
+          <span class="right-git">
+            <a href="https://github.com/OnlyLoveJ">github地址</a>
+          </span>
+        </div>
       </el-footer>
     </el-container>
   </el-container>
@@ -141,7 +178,7 @@ import navigation from "../components/home/navigation"
 import { mapActions, mapState } from "vuex"
 import { finddata } from "@/common/crod/index"
 import { request } from "@/network/request"
-
+import prompt from "../components/common/prompt"
 export default {
   data() {
     return {
@@ -172,23 +209,25 @@ export default {
       weaimg: ["yin", "yu", "yun", "wind", "qing"],
       weaindex: null,
       // 公告栏
-      promptVisible: false
+      promptVisible: false,
+      Islogin: false
     }
   },
   components: {
-    navigation
+    navigation,
+    prompt
   },
   beforeCreate() {},
-   created() {
+  created() {
     this.username = sessionStorage.getItem("username")
-    
+
     // 调用获取导航数据方法
     this.getNav()
     // 获取当天天气预报
     this.getweather()
     // 登录提示
     // this.userprompt();
-    
+
     // 当前用户权限
   },
   mounted() {
@@ -222,19 +261,27 @@ export default {
       this.navs = res.data
       // console.log(this.navs);
       // 获取当前用户数据
-     this.getuserinfo()
+      this.getuserinfo()
     },
     // 退出登录
-    handleCommand(command) {
-      if (command == 1)
-        return this.$router.push({
-          path: "/information",
-          query: { _id: this.userinfo._id }
-        })
+    logOut() {
       window.sessionStorage.removeItem("token")
       window.sessionStorage.removeItem("username")
       window.sessionStorage.removeItem("token_exp")
       this.$router.go(0)
+    },
+    handleCommand(command) {
+      if (command == 1)
+        return this.$router.push({
+          path: "/information/" + this.userinfo._id,
+          query: { type: "info" }
+        })
+      if (command == 2)
+        return this.$router.push({
+          path: "/information/" + this.userinfo._id,
+          query: { type: "password" }
+        })
+      this.logOut()
     },
     // users组件传值
     finduser(data) {
@@ -284,10 +331,18 @@ export default {
       if (res.length !== 0) {
         this.userinfo = res[0]
         this.hisvalue = res[0].history.reverse().splice(0, 10)
+        // 禁止登录
+        if (this.userinfo.status === 2) {
+          this.Islogin = true
+          setTimeout(() => {
+            this.logOut()
+          }, 5000)
+          return
+        }
         // 把当前用户的信息用vuex保存起来
         await this.$store.dispatch("asyncstatus", this.userinfo.status)
         await this.$store.dispatch("asyncuserinfo", res[0])
-        if (this.userinfo.minute >= 1000 && this.status === 0) {
+        if (this.userinfo.minute >= 10000 && this.status === 0) {
           this.$router.push("/tolluay")
           this.flag = true
           return this.$notify({
@@ -380,13 +435,11 @@ export default {
       )
     },
     ...mapState(["status"]),
-    isinput(){
+    isinput() {
       return !this.reg.test(this.pathtitle)
     }
   },
-  watch: {
-
-  }
+  watch: {}
 }
 </script>
 <style lang="scss" >
@@ -620,5 +673,23 @@ export default {
   background: #ffffff;
   font-size: 25px;
   text-align: center;
+}
+/* 版权部分 */
+.el-footer {
+  display: flex;
+  flex-direction: column;
+}
+.footer-link {
+  display: block;
+  padding-top: 5px;
+  line-height: 16px;
+}
+.github {
+  display: flex;
+  align-items: center;
+}
+.right-git {
+  display: inline-block;
+  padding-left: 5px;
 }
 </style>

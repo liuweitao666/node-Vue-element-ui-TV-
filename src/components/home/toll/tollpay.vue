@@ -153,11 +153,13 @@ export default {
           price,
           username: this.userinfo.username
         })
+        
         if (res.code !== 1) {
           return this.$message.error(res.msg)
         }
+        window.open(res.data)
         this.$message.success(res.msg)
-        this.gettoll()
+        // this.gettoll()
         return (this.prompts = false)
       }
       this.prompts = false

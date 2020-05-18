@@ -7,11 +7,44 @@
       :closable="true"
       v-if="!status"
     ></el-alert>
+    <!-- 筛选区域 -->
+    <div class="cera">
+      <div class="list-a">
+        <span
+          v-for="(item,index) in area"
+          :key="index"
+          @click="selectarea(item,index)"
+          :class="['aazz',{'activecolor':index===activearea}]"
+        >{{item}}</span>
+      </div>
+      <div class="list-a">
+        <span
+          v-for="(item,index) in Type"
+          :key="index"
+          @click="clickAz(item.title,index)"
+          :class="['aazz',{'activecolor':index===active}]"
+        >{{item.title}}</span>
+      </div>
+      <div class="list-a">
+        <span
+          v-for="(item,index) in Year"
+          :key="index"
+          @click="selectyear(item,index)"
+          :class="{'activecolor':index===Yactive}"
+        >{{item}}</span>
+      </div>
+    </div>
     <!-- 节目列表 -->
     <el-row style="height:50px;">
       <!-- 添加节目 -->
       <el-col :span="3" style="display:flex; align-items:center;height:100%" v-if="status">
-        <el-button type="primary" icon="el-icon-plus" round size="medium" @click="addfrom('save')">添加</el-button>
+        <el-button
+          type="primary"
+          icon="el-icon-plus"
+          round
+          size="medium"
+          @click="addfrom('save')"
+        >添加</el-button>
       </el-col>
 
       <!-- 用户可以看到 -->
@@ -37,7 +70,7 @@
       </el-col>
     </el-row>
     <!-- 节目内容区域 -->
-    <div class="list">
+    <div class="list" v-if="JSON.stringify(programlist) !=='[]'">
       <div
         v-for="(item,index) in prolist"
         :key="item.id"
@@ -92,6 +125,8 @@
         <div class="bottom-btn" v-else>{{item.subtitle}}</div>
       </div>
     </div>
+    <div class="nullprogram" v-else>暂无节目</div>
+
     <!-- 分页区域 -->
     <el-pagination
       background
@@ -106,7 +141,7 @@
 </template>
 <script>
 import { deleted } from "@/common/crod/index"
-import { mapState } from "vuex"
+import { mapState, mapActions ,mapMutations} from "vuex"
 export default {
   data() {
     return {
@@ -170,19 +205,66 @@ export default {
       hover: -1,
       prolist: null,
       pagenum: 1,
-      pagesize: 6
+      pagesize: 6,
+      
+      Year: [
+        "全部年代",
+        "2020",
+        "2019",
+        "2018",
+        "2017",
+        "2016",
+        "2015",
+        "2014",
+        "2013",
+        "2012",
+        "2011",
+        "2010",
+        "2009"
+      ],
+      area: [
+        "全部地区",
+        "内地",
+        "香港",
+        "韩国",
+        "美国",
+        "日本",
+        "泰国",
+        "台湾",
+        "其他"
+      ],
+      // 请求体
+      query: {
+        area: "",
+        type: "",
+        date: ""
+      },
+      // 控制筛选的样式
+      active: 0,
+      Yactive: 0,
+      activearea: 0
     }
   },
+  components: {},
   props: {
     programlist: {
       type: Array,
       defaults: []
+    },
+    Type:{
+      type:Array,
+      defaults:[]
     }
   },
   created() {
     this.handlepage()
   },
+  beforeDestroy(){
+    this.Editquery()
+  },
   methods: {
+    ...mapActions(["getlist"]),
+    ...mapMutations(["Editquery"]),
     // 添加/更新节目内容，发送网络请求
     addfrom() {
       this.$router.push({
@@ -231,8 +313,9 @@ export default {
         id,
         hot
       })
-      if (res.code !== 1) return this.$message.error("服务器出错，请稍后再试！！")
-      
+      if (res.code !== 1)
+        return this.$message.error("服务器出错，请稍后再试！！")
+
       this.$router.push({ path: "/detail", query: { id, title: this.path } })
     },
     // 分页方法
@@ -245,6 +328,48 @@ export default {
     // 跳转页面
     handleCurrentChange(val) {
       this.pagenum = val
+      this.handlepage()
+    },
+    // 获取筛选数据
+    async getselectdata() {
+      const { data: res } = await this.getlist({
+        title: this.path,
+        query: this.query
+      })
+      console.log(res)
+      this.$emit("resetdata", res.data)
+    },
+    // 选择类型筛选
+    async clickAz(title, index) {
+      if (index === 0) {
+        this.query.type = ""
+      } else {
+        this.query.type = title
+      }
+      this.active = index
+      this.getselectdata()
+      this.handlepage()
+    },
+    // 筛选地区数据
+    async selectarea(area, index) {
+      if (index === 0) {
+        this.query.area = ""
+      } else {
+        this.query.area = area
+      }
+      this.activearea = index
+      this.getselectdata()
+      this.handlepage()
+    },
+    // 筛选年份数据
+    async selectyear(year, index) {
+      if (index === 0) {
+        this.query.date = ""
+      } else {
+        this.query.date = year
+      }
+      this.Yactive = index
+      this.getselectdata()
       this.handlepage()
     }
   },
@@ -261,13 +386,42 @@ export default {
     }
   },
   watch: {
-    programlist () {
+    programlist() {
       this.handlepage()
     }
   }
 }
 </script>
-<style scoped>
+<style lang="scss" scoped>
+// 筛选区域
+.cera {
+  .list-a {
+    margin-bottom: 10px;
+  }
+  background: #ffffff;
+  span {
+    display: inline-block;
+    cursor: pointer;
+    font-size: 14px;
+    height: 26px;
+    line-height: 26px;
+    padding: 0 10px;
+    margin: 10px 0 0 15px;
+    text-align: center;
+    border-radius: 13px;
+    transition: all 0.3s ease;
+  }
+  span:hover {
+    color: #00a1d6;
+  }
+  .activecolor {
+    background: #efefef;
+    color: #00a1d6;
+  }
+  .first {
+    text-align: right;
+  }
+}
 .sort {
   display: flex;
   justify-content: flex-end;
@@ -280,6 +434,13 @@ export default {
   font-size: 13px;
   margin-left: 2px;
   color: #303133;
+}
+// 无节目时样式
+.nullprogram {
+  text-align: center;
+  color: #999;
+  padding: 50px 0;
+  font-size: 20px;
 }
 .list-block {
   margin: 10px 10px 5px;

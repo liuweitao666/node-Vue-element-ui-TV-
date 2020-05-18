@@ -27,6 +27,7 @@
       active-text-color="#67d3e0"
       unique-opened
       router
+      v-if="navlist!==2"
     >
       <el-submenu :index="index+''" v-for="(item,index) in navlist" :key="item.id">
         <template slot="title">
@@ -40,10 +41,11 @@
         </el-menu-item>
       </el-submenu>
     </el-menu>
+    <!-- 禁止登录用户可以看到 -->
+    <div class="baned" v-else>您违规啦!</div>
   </div>
 </template>
 <script>
-
 export default {
   data() {
     return {
@@ -59,7 +61,7 @@ export default {
       // 默认头像
       navlist: null
       // status:0
-    };
+    }
   },
   props: {
     navs: {
@@ -78,35 +80,34 @@ export default {
     avatar: {
       type: String
     },
-    minute:{
-      type:Number
+    minute: {
+      type: Number
     }
   },
-   created() {
-      
-  },
+  created() {},
   methods: {
     // 展示导航栏
     getnavs() {
       if (this.status === 0) {
         this.navlist = this.navs.filter(item => {
           if (this.minute >= 10000) {
-            return item.title === "收费管理";
+            return item.title === "收费管理"
           }
           return item.status === this.status
-        });
+        })
+      } else if (this.status === 1) {
+        this.navlist = this.navs
       } else {
-        this.navlist = this.navs;
+        this.navlist = 2
       }
     }
   },
   // eslint-disable-next-line no-dupe-keys
-  async mounted(){
-    await this.getnavs();
+  async mounted() {
+    await this.getnavs()
   },
-  computed: {
-  }
-};
+  computed: {}
+}
 </script>
 <style scoped>
 .container {
@@ -153,7 +154,13 @@ export default {
   width: 100%;
   height: 100%;
 }
-.hide{
+.hide {
   display: none;
+}
+.container .baned {
+  padding: 20px 10px 0;
+  text-align: center;
+  color: #ffffff;
+  font-size: 18px;
 }
 </style>

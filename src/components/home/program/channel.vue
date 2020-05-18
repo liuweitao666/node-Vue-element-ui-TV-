@@ -189,6 +189,8 @@ export default {
       const { data: res } = await request2("/TVTime/Query", {
         key: "aceed97ba96e4eed9b7b12a5574ec2f1"
       })
+      console.log(res)
+      if(res.error_code !==0) return this.$message.error(res.reason)
       if (res.error_code === 0) {
         this.channelcate = res.result
       }

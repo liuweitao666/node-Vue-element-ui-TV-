@@ -8,7 +8,10 @@
             <div class="img-contain">
               <img src="@/assets/image/wlecome/play.svg" alt class="wlecome-img" />
             </div>
-            总播放量{{play}}
+            <div class="card-word">
+              <span class="Detail-Title" style="  color: rgba(128, 202, 251, 0.9);">总播放量</span>
+              <span class="number" style="color:rgba(119, 127, 232, 0.9)">{{Allplay}}</span>
+            </div>
           </div>
         </el-col>
         <el-col :span="6">
@@ -16,7 +19,10 @@
             <div class="img-contain backpro">
               <img src="@/assets/image/wlecome/play.svg" alt class="wlecome-img" />
             </div>
-            总节目数{{total}}
+            <div class="card-word">
+              <span class="Detail-Title" style="  color: rgba(164, 205, 93, 0.9);">总节目数</span>
+              <span class="number" style="color:rgba(98, 180, 94, 0.9)">{{Ptotal}}</span>
+            </div>
           </div>
         </el-col>
         <el-col :span="6">
@@ -24,7 +30,10 @@
             <div class="img-contain backup">
               <img src="@/assets/image/wlecome/update.svg" alt class="wlecome-img" />
             </div>
-            <span>今日更新{{dayup.length}}</span>
+            <div class="card-word">
+              <span class="Detail-Title" style="  color: rgba(230, 132, 98, 0.9);">今日更新</span>
+              <span class="number">{{dayup.length}}</span>
+            </div>
           </div>
         </el-col>
         <el-col :span="6">
@@ -32,7 +41,7 @@
             <div class="img-contain backps">
               <img src="@/assets/image/wlecome/push.svg" alt class="wlecome-img" />
             </div>
-            <span>留言板</span>
+            <span style=" color: rgba(229, 200, 90, 0.9)">留言板</span>
           </div>
         </el-col>
       </el-row>
@@ -100,8 +109,12 @@ export default {
       picimg: [],
       // 总节目数量
       total: 0,
+      Ptotal: 0,
+      timer: null,
+      playtimer: null,
       // 总播放数
       play: 0,
+      Allplay: 0,
       // 每日更新的节目
       dayup: [],
       // 控制留言板的显示
@@ -132,6 +145,7 @@ export default {
     async getallprogram() {
       const { data: res } = await this.$http.get("/home/program")
       // 保存所有节目
+      console.log(res)
       res.data.forEach(async item => {
         this.allprogram.push(...item.data)
       })
@@ -151,7 +165,13 @@ export default {
       // 判断是否是今天更新的数据
       res.data.forEach(item => {
         let data = item.data.filter(item2 => {
+          console.log(item2)
+          let dt = new Date(item2.updatetime)
           let uptime = this.dateformat(item2.updatetime)
+          item2.updatetime = dt.valueOf()
+          if(nowtime===uptime){
+            console.log(item2)
+          }
           return nowtime === uptime
         })
         // console.log(data)
@@ -162,10 +182,12 @@ export default {
       // 添加首页的数据
       res.data[0].data.forEach(item => {
         item.path = res.data[0].title
+        console.log(item)
       })
       let movie = res.data[0].data
         .sort((a, b) => {
-          return parseInt(a.updatetime) - parseInt(b.updatetime)
+          
+          return parseInt(b.updatetime) - parseInt(a.updatetime)
         })
         .slice(0, 3)
 
@@ -174,7 +196,7 @@ export default {
       })
       let tv = res.data[1].data
         .sort((a, b) => {
-          return parseInt(a.updatetime) - parseInt(b.updatetime)
+          return parseInt(b.updatetime) - parseInt(a.updatetime)
         })
         .slice(0, 2)
 
@@ -188,7 +210,7 @@ export default {
       })
       let dh = res.data[3].data
         .sort((a, b) => {
-          return parseInt(a.updatetime) - parseInt(b.updatetime)
+          return parseInt(b.updatetime) - parseInt(a.updatetime)
         })
         .slice(0, 4)
       // 把节目数据加入到数组picimg
@@ -241,6 +263,28 @@ export default {
       status: state => state.status,
       username: state => state.userinfo.username
     })
+  },
+  watch: {
+    // 数字缓动效果
+    total(newval) {
+      console.log(newval)
+      this.timer = setInterval(() => {
+        this.Ptotal++
+        if (this.Ptotal === newval) {
+          clearInterval(this.timer)
+        }
+      }, 80)
+    },
+    play(newval) {
+      console.log(newval)
+      this.playtimer = setInterval(() => {
+        this.Allplay+=5
+        if (this.Allplay >= newval) {
+          this.Allplay = newval
+          clearInterval(this.playtimer)
+        }
+      }, 10)
+    }
   }
 }
 </script>
@@ -270,6 +314,16 @@ export default {
 
 .cursor {
   cursor: pointer;
+}
+// 系统数据模块标题
+.Detail-Title {
+  display: block;
+  padding-bottom: 6px;
+}
+.number {
+  font-size: 18px;
+  font-weight: 700;
+  color: coral;
 }
 .img-contain {
   width: 55px;

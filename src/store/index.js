@@ -12,7 +12,8 @@ const store = new Vuex.Store({
             pagenum: 1,
             id: "",
             name: '',
-            sort: 'new'
+            sort: 'new',
+            query: null
         },
         // programlist 数据
         programlist: null,
@@ -23,11 +24,17 @@ const store = new Vuex.Store({
         Allprogram: null
     },
     mutations: {
-        getprogramlist(state, params, ) {
+        getprogramlist(state, params) {
+
             state.queryinfo.title = params.title
             state.queryinfo.name = params.name
+            if (params.query) {
+                state.queryinfo.query = params.query
+            }
+    
             // 获取数据
         },
+        // 获取当前用户数据
         editstatus(state, status) {
             state.status = status
         },
@@ -38,6 +45,9 @@ const store = new Vuex.Store({
         // 更改排序方式
         editsort(state, type) {
             state.queryinfo.sort = type
+        },
+        Editquery(state) {
+            state.queryinfo.query = null
         },
         // 全局保存所有节目
         saveprogramAll(state, program) {
@@ -52,7 +62,6 @@ const store = new Vuex.Store({
                 axios.get("/home/program", {
                     params: state.queryinfo
                 }).then(res => {
-
                     resolve(res)
                 }).catch(err => {
                     reject(err)
@@ -85,7 +94,7 @@ const store = new Vuex.Store({
                 let path = item.type
                 program.forEach(programs => {
                     if (title === programs.title) {
-                     
+
                         programs.Src = Src
                         programs.path = path
                     }
@@ -95,8 +104,8 @@ const store = new Vuex.Store({
             program.sort((a, b) => {
                 return b.hot - a.hot
             })
-            
-            commit('saveprogramAll',program)
+
+            commit('saveprogramAll', program)
         }
     },
     getters: {
